@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>Asim Radar Mobile</title>
+    <style>
+        body { background: #1a1a1a; color: lime; font-family: 'Consolas', monospace; text-align: center; padding-top: 50px; }
+        .radar-circle { width: 250px; height: 250px; border: 5px solid lime; border-radius: 50%; margin: 0 auto; overflow: hidden; position: relative; box-shadow: 0 0 20px lime; }
+        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .btn { background: black; color: lime; border: 2px solid lime; padding: 15px 30px; border-radius: 25px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        .btn:active { background: lime; color: black; }
+    </style>
+</head>
+<body>
+    <h2>SYSTEM: ACTIVE RADAR</h2>
+    <div class="radar-circle">
+        <video id="myVideo" autoplay playsinline></video>
+    </div>
+    <button class="btn" onclick="startSystem()">INITIALIZE SYSTEM</button>
+    <p id="status">Status: Waiting...</p>
+
+    <audio id="silentAudio" loop>
+        <source src="https://www.soundjay.com/button/beep-01a.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        async function startSystem() {
+            const status = document.getElementById('status');
+            const audio = document.getElementById('silentAudio');
+            
+            try {
+                // طلب الكاميرا والمايك
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('myVideo').srcObject = stream;
+                
+                // تشغيل الصوت الصامت (مهم جداً للـ iOS في الخلفية)
+                audio.muted = true; // نخليه صامت عشان ما يزعجك
+                audio.play();
+                
+                status.innerText = "Status: RADAR LIVE (Background Active)";
+                status.style.color = "cyan";
+            } catch (err) {
+                status.innerText = "Error: " + err.message;
+                status.style.color = "red";
+            }
+        }
+    </script>
+</body>
+</html>
