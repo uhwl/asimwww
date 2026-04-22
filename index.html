@@ -7,29 +7,17 @@
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* Header */
         #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 10px; cursor: pointer; border-radius: 5px; margin-left: 5px; font-size: 14px; }
-        
-        /* Messages Area */
         #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
         .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; position: relative; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); cursor: pointer; }
         .user-name { color: var(--main-color); font-size: 11px; font-weight: bold; margin-bottom: 3px; display: block; }
-        
-        /* Actions (Edit/Delete) */
         .actions { display: none; position: absolute; left: -75px; top: 50%; transform: translateY(-50%); background: #222; border: 1px solid var(--main-color); border-radius: 5px; padding: 5px; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
         .actions button { background: none; border: none; color: white; cursor: pointer; padding: 5px; font-size: 14px; }
-
-        /* Settings Modal */
         #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 12px; width: 85%; max-width: 350px; box-shadow: 0 0 30px #000; }
-        #settingsModal h3 { margin-top: 0; color: var(--main-color); }
         #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
-
-        /* Input Area */
         #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
         input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
-        input#chatInput:focus { border-color: var(--main-color); }
         #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
@@ -38,7 +26,7 @@
 <div id="header">
     <div style="font-weight: bold; font-size: 20px;">⚡ AsimTalk</div>
     <div class="nav-btns">
-        <button onclick="startCall()">📞 مكالمة</button>
+        <button onclick="startCall()">📞 بدء مكالمة</button>
         <button onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
@@ -49,14 +37,14 @@
     <h3>⚙️ إعدادات الحساب</h3>
     <label>الاسم المستعار:</label>
     <input type="text" id="setUserName">
-    <label>الايميل (للمزامنة):</label>
+    <label>الايميل:</label>
     <input type="email" id="setUserEmail" placeholder="example@mail.com">
-    <button onclick="saveSettings()" style="width: 100%; padding: 12px; background: var(--main-color); border: none; font-weight: bold; cursor: pointer; border-radius: 5px;">حفظ التغييرات</button>
+    <button onclick="saveSettings()" style="width: 100%; padding: 12px; background: var(--main-color); border: none; font-weight: bold; cursor: pointer; border-radius: 5px;">حفظ</button>
     <button onclick="toggleSettings()" style="width: 100%; margin-top: 10px; background: #333; color: white; border: none; padding: 8px; cursor: pointer; border-radius: 5px;">إغلاق</button>
 </div>
 
 <div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب رسالتك واضغط Enter..." onkeydown="if(event.key==='Enter') sendMsg()">
+    <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter') sendMsg()">
     <button id="sendBtn" onclick="sendMsg()">إرسال</button>
 </div>
 
@@ -68,7 +56,7 @@
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
         authDomain: "asimtalk-8a037.firebaseapp.com",
         projectId: "asimtalk-8a037",
-        storageBucket: "",
+        storageBucket: "asimtalk-8a037.firebasestorage.app",
         messagingSenderId: "76554634749",
         appId: "1:76554634749:web:a8e4eeb9a96cf578c90594"
     };
@@ -76,17 +64,16 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // تعريف صوت الإشعار
-    const notifSound = new Audio('notif.mp3');
-    notifSound.load(); // <-- هذا هو مكانها الوحيد الصحيح!
-    // تعريف صوت الإشعار
     const notifSound = new Audio('notif.mp3');
     notifSound.load();
-    // تحميل البيانات المحفوظة
+
     let myName = localStorage.getItem('chatName') || "مستخدم_" + Math.floor(Math.random()*99);
     let myEmail = localStorage.getItem('chatEmail') || "";
     document.getElementById('setUserName').value = myName;
     document.getElementById('setUserEmail').value = myEmail;
+
+    // توقيت فتح الصفحة لتجنب إشعارات الرسائل القديمة
+    const pageLoadTime = Date.now();
 
     window.toggleSettings = () => {
         const modal = document.getElementById('settingsModal');
@@ -98,12 +85,14 @@
         myEmail = document.getElementById('setUserEmail').value;
         localStorage.setItem('chatName', myName);
         localStorage.setItem('chatEmail', myEmail);
-        alert("تم الحفظ بنجاح! ✅");
+        alert("تم الحفظ! ✅");
         toggleSettings();
     };
 
+    // نظام المكالمة
     window.startCall = () => {
-        window.open("https://meet.jit.si/AsimTalk-CallRoom", "_blank");
+        const roomName = "AsimTalk-Private-Room";
+        window.open(`https://meet.jit.si/${roomName}`, "_blank");
     };
 
     window.sendMsg = async () => {
@@ -122,22 +111,16 @@
         const el = document.getElementById('actions-' + id);
         if(el) {
             el.style.display = 'block';
-            if (window['t'+id]) clearTimeout(window['t'+id]);
-            window['t'+id] = setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
+            setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
         }
     };
 
-    window.deleteMsg = async (id) => {
-        await deleteDoc(doc(db, "messages", id));
-    };
-
+    window.deleteMsg = async (id) => { await deleteDoc(doc(db, "messages", id)); };
     window.editMsg = async (id, oldText) => {
         const newText = prompt("تعديل الرسالة:", oldText);
         if(newText) await updateDoc(doc(db, "messages", id), { text: newText });
     };
 
-    // مراقبة الرسائل الجديدة وتشغيل الصوت
-   // --- استبدل من هنا ---
     const q = query(collection(db, "messages"), orderBy("time", "asc"));
     onSnapshot(q, (snapshot) => {
         const container = document.getElementById('messages');
@@ -146,30 +129,20 @@
             if (change.type === "added") {
                 const data = change.doc.data();
                 
-                // التأكد أن الرسالة جديدة (وصلت الآن وليست قديمة)
-                const isNewMessage = data.time && (Math.abs(Date.now() - data.time.toMillis()) < 10000);
+                // --- الحل الذكي هنا ---
+                // لا تشغل الصوت إلا إذا كانت الرسالة أُرسلت بعد فتحك للموقع بـ 5 ثواني على الأقل
+                const msgTime = data.time ? data.time.toMillis() : Date.now();
+                const isNewSinceOpen = msgTime > (pageLoadTime + 5000);
 
-                if (data.user !== myName && data.email !== myEmail) {
-                    // تشغيل الصوت (حتى لو المتصفح في الخلفية)
-                    notifSound.play().catch((e) => console.log("الصوت يحتاج تفاعل"));
-
-                    // إشعار النظام
-                    if (Notification.permission === "granted") {
-                        const notification = new Notification(`AsimTalk: ${data.user}`, {
-                            body: data.text,
-                            icon: 'https://cdn-icons-png.flaticon.com/512/5962/5962461.png',
-                        });
-                        
-                        notification.onclick = function() {
-                            window.focus();
-                            this.close();
-                        };
+                if (data.user !== myName && data.email !== myEmail && isNewSinceOpen) {
+                    notifSound.play().catch(() => {});
+                    if (document.hidden && Notification.permission === "granted") {
+                        new Notification(`رسالة من ${data.user}`, { body: data.text });
                     }
                 }
             }
         });
 
-        // هذا الجزء المسؤول عن عرض الرسائل في الصفحة
         container.innerHTML = "";
         snapshot.forEach(d => {
             const data = d.data();
@@ -177,22 +150,14 @@
             const div = document.createElement('div');
             div.className = 'msg';
             if(isMe) div.onclick = (e) => { e.stopPropagation(); showActions(d.id); };
-            
-            div.innerHTML = `
-                <span class="user-name">${data.user}</span>
-                <div>${data.text}</div>
-                ${isMe ? `<div id="actions-${d.id}" class="actions">
-                    <button onclick="editMsg('${d.id}', '${data.text}')">✏️</button>
-                    <button onclick="deleteMsg('${d.id}')">🗑️</button>
-                </div>` : ''}
-            `;
+            div.innerHTML = `<span class="user-name">${data.user}</span><div>${data.text}</div>
+                ${isMe ? `<div id="actions-${d.id}" class="actions"><button onclick="editMsg('${d.id}', '${data.text}')">✏️</button><button onclick="deleteMsg('${d.id}')">🗑️</button></div>` : ''}`;
             container.appendChild(div);
         });
         container.scrollTop = container.scrollHeight;
     });
-    // --- إلى هنا ---
+
     if ("Notification" in window) Notification.requestPermission();
 </script>
-
 </body>
 </html>
