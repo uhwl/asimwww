@@ -78,6 +78,9 @@
 
     // تعريف صوت الإشعار
     const notifSound = new Audio('notif.mp3');
+    notifSound.load(); // <-- هذا هو مكانها الوحيد الصحيح!
+    // تعريف صوت الإشعار
+    const notifSound = new Audio('notif.mp3');
     notifSound.load();
     // تحميل البيانات المحفوظة
     let myName = localStorage.getItem('chatName') || "مستخدم_" + Math.floor(Math.random()*99);
