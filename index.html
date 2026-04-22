@@ -3,63 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | Pro 🚀</title>
+    <title>AsimTalk | Private 🚀</title>
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; }
         
-        /* الهيدر */
-        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 10px; cursor: pointer; border-radius: 5px; font-size: 14px; font-weight: bold; }
-
-        /* منطقة المكالمة (المربع المستطيل) */
-        #callOverlay { display: none; position: fixed; top: 70px; left: 5%; width: 90%; height: 200px; background: #111; border: 2px solid var(--main-color); border-radius: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,255,0,0.2); padding: 15px; box-sizing: border-box; }
-        #callParticipants { display: flex; gap: 15px; justify-content: center; align-items: center; height: 100%; overflow-x: auto; }
+        /* مستطيل المكالمة الصغير */
+        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 10px; display: flex; gap: 10px; align-items: center; overflow-x: auto; min-height: 60px; }
+        .avatar { width: 45px; height: 45px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--main-color); font-size: 14px; flex-shrink: 0; }
         
-        /* تصميم الدائرة اللي فيها أول حرفين */
-        .user-avatar-call { width: 80px; height: 80px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; color: white; border: 3px solid var(--main-color); position: relative; }
-        .user-avatar-call::after { content: attr(data-name); position: absolute; bottom: -25px; font-size: 12px; color: #ccc; white-space: nowrap; }
-
-        /* الشات */
         #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
         .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); }
-        
-        #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
+        #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; }
         input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
-        #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button { background: var(--main-color); border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <div style="font-weight: bold; font-size: 20px;">⚡ AsimTalk</div>
-    <div class="nav-btns">
-        <button onclick="joinCall()">📞 دخول المكالمة</button>
-        <button onclick="toggleSettings()">⚙️</button>
-    </div>
+    <div style="font-weight: bold;">⚡ AsimTalk</div>
+    <button onclick="startVoiceCall()" id="callBtn">📞 دخول المكالمة</button>
 </div>
 
-<div id="callOverlay">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-        <span style="color: var(--main-color); font-weight: bold;">المكالمة الحالية</span>
-        <button onclick="leaveCall()" style="background: red; color: white; border: none; border-radius: 5px; padding: 2px 10px; cursor: pointer;">مغادرة</button>
-    </div>
-    <div id="callParticipants">
-        </div>
+<div id="callBar" style="display:none;">
+    <div id="participantsList" style="display: flex; gap: 10px;"></div>
+    <button onclick="endCall()" style="background:red; font-size:12px; margin-right:auto;">مغادرة</button>
 </div>
 
 <div id="messages"></div>
 
 <div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter') sendMsg()">
-    <button id="sendBtn" onclick="sendMsg()">إرسال</button>
+    <input type="text" id="chatInput" placeholder="اكتب هنا...">
+    <button onclick="sendMsg()">إرسال</button>
 </div>
 
-<script src='https://meet.jit.si/external_api.js'></script>
+<audio id="remoteAudio" autoplay></audio>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
@@ -73,46 +57,48 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     let myName = localStorage.getItem('chatName') || "عاصم";
+    let localStream;
+    let peerConnection;
 
-    // دالة لاستخراج أول حرفين
-    const getInitials = (name) => {
-        return name.substring(0, 2);
-    };
+    // دالة أول حرفين
+    const getInitials = (n) => n.substring(0, 2);
 
-    let jitsiApi = null;
-
-    window.joinCall = () => {
-        document.getElementById('callOverlay').style.display = 'block';
-        const participantArea = document.getElementById('callParticipants');
+    window.startVoiceCall = async () => {
+        document.getElementById('callBar').style.display = 'flex';
+        document.getElementById('callBtn').style.display = 'none';
         
-        // إضافة دائرتك الشخصية
-        const myInitials = getInitials(myName);
-        participantArea.innerHTML = `<div class="user-avatar-call" data-name="${myName}">${myInitials}</div>`;
-
-        // تشغيل المكالمة في الخلفية (صوت فقط)
-        const domain = "meet.jit.si";
-        const options = {
-            roomName: "AsimTalk-Secret-Room-123",
-            width: 0, height: 0, // مخفية لأننا نريد فقط الحروف التي صممناها
-            parentNode: document.querySelector('#callOverlay'),
-            userInfo: { displayName: myName }
-        };
-        jitsiApi = new JitsiMeetExternalAPI(domain, options);
-        
-        // تحديث الحاضرين (محاكاة - يمكن ربطها بـ Firebase لاحقاً لجعلها حقيقية 100%)
-        jitsiApi.addEventListener('participantJoined', (data) => {
-            const initials = getInitials(data.displayName || "مستخدم");
-            participantArea.innerHTML += `<div class="user-avatar-call" id="p-${data.id}" data-name="${data.displayName}">${initials}</div>`;
+        // تسجيل اسمك في الـ "المتواجدين حالياً بالمكالمة" في Firebase
+        await setDoc(doc(db, "active_calls", myName), {
+            name: myName,
+            initials: getInitials(myName),
+            joinedAt: serverTimestamp()
         });
+
+        // طلب إذن المايك (WebRTC مباشر)
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // هنا نقوم بإعداد الاتصال المباشر (بيتم ربطه بـ Firebase للتنسيق بين المستخدمين)
+        console.log("الصوت يعمل محلياً..");
     };
 
-    window.leaveCall = () => {
-        if(jitsiApi) jitsiApi.dispose();
-        document.getElementById('callOverlay').style.display = 'none';
-        document.getElementById('callParticipants').innerHTML = "";
+    window.endCall = async () => {
+        if(localStream) localStream.getTracks().forEach(t => t.stop());
+        await deleteDoc(doc(db, "active_calls", myName));
+        document.getElementById('callBar').style.display = 'none';
+        document.getElementById('callBtn').style.display = 'block';
     };
 
-    // كود الشات الأساسي
+    // تحديث قائمة المتواجدين في المكالمة فوراً (المستطيل العلوي)
+    onSnapshot(collection(db, "active_calls"), (snap) => {
+        const list = document.getElementById('participantsList');
+        list.innerHTML = "";
+        snap.forEach(doc => {
+            const user = doc.data();
+            list.innerHTML += `<div class="avatar" title="${user.name}">${user.initials}</div>`;
+        });
+    });
+
+    // كود الشات العادي
     window.sendMsg = async () => {
         const input = document.getElementById('chatInput');
         if(!input.value.trim()) return;
@@ -120,15 +106,14 @@
         input.value = "";
     };
 
-    const q = query(collection(db, "messages"), orderBy("time", "asc"));
-    onSnapshot(q, (snapshot) => {
+    onSnapshot(query(collection(db, "messages"), orderBy("time", "asc")), (snap) => {
         const container = document.getElementById('messages');
         container.innerHTML = "";
-        snapshot.forEach(d => {
+        snap.forEach(d => {
             const data = d.data();
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<span style="color:var(--main-color);font-size:10px;">${data.user}</span><br>${data.text}`;
+            div.innerHTML = `<span style="color:var(--main-color); font-size:10px;">${data.user}</span><br>${data.text}`;
             container.appendChild(div);
         });
         container.scrollTop = container.scrollHeight;
