@@ -1,49 +1,64 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Asim Radar Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AsimTalk | اسيم تالك</title>
     <style>
-        body { background: #1a1a1a; color: lime; font-family: 'Consolas', monospace; text-align: center; padding-top: 50px; }
-        .radar-circle { width: 250px; height: 250px; border: 5px solid lime; border-radius: 50%; margin: 0 auto; overflow: hidden; position: relative; box-shadow: 0 0 20px lime; }
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        .btn { background: black; color: lime; border: 2px solid lime; padding: 15px 30px; border-radius: 25px; cursor: pointer; margin-top: 20px; font-weight: bold; }
-        .btn:active { background: lime; color: black; }
+        body { background: #0b0b0b; color: #00ff00; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: #151515; padding: 30px; border-radius: 15px; border: 1px solid #00ff00; box-shadow: 0 0 20px rgba(0, 255, 0, 0.2); width: 300px; text-align: center; }
+        input { width: 90%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #00ff00; border: none; color: black; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #00cc00; transform: scale(1.05); }
+        .status { font-size: 12px; margin-top: 10px; color: #888; }
     </style>
 </head>
 <body>
-    <h2>SYSTEM: ACTIVE RADAR</h2>
-    <div class="radar-circle">
-        <video id="myVideo" autoplay playsinline></video>
-    </div>
-    <button class="btn" onclick="startSystem()">INITIALIZE SYSTEM</button>
-    <p id="status">Status: Waiting...</p>
 
-    <audio id="silentAudio" loop>
-        <source src="https://www.soundjay.com/button/beep-01a.mp3" type="audio/mpeg">
-    </audio>
+<div class="login-card" id="auth-container">
+    <h2>AsimTalk ⚡</h2>
+    <input type="email" id="email" placeholder="الايميل">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="login()">دخول</button>
+    <button onclick="register()" style="background:none; color:#00ff00; margin-top:10px;">إنشاء حساب جديد</button>
+    <div id="msg" class="status">جاهز للنظام...</div>
+</div>
 
-    <script>
-        async function startSystem() {
-            const status = document.getElementById('status');
-            const audio = document.getElementById('silentAudio');
-            
-            try {
-                // طلب الكاميرا والمايك
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('myVideo').srcObject = stream;
-                
-                // تشغيل الصوت الصامت (مهم جداً للـ iOS في الخلفية)
-                audio.muted = true; // نخليه صامت عشان ما يزعجك
-                audio.play();
-                
-                status.innerText = "Status: RADAR LIVE (Background Active)";
-                status.style.color = "cyan";
-            } catch (err) {
-                status.innerText = "Error: " + err.message;
-                status.style.color = "red";
-            }
-        }
-    </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  // حط الـ Config حقك هنا
+  const firebaseConfig = {
+    apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
+    authDomain: "asimtalk-8a037.firebaseapp.com",
+    projectId: "asimtalk-8a037",
+    storageBucket: "asimtalk-8a037.firebasestorage.app",
+    messagingSenderId: "76554634749",
+    appId: "1:76554634749:web:a8e4eeb9a96cf578c90594"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  window.register = async () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        alert("تم إنشاء حسابك يا وحش!");
+    } catch (err) { alert(err.message); }
+  };
+
+  window.login = async () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        document.getElementById('auth-container').innerHTML = "<h2>تم تسجيل الدخول! ✅</h2><p>انتظر برمجتنا للشات...</p>";
+    } catch (err) { alert("خطأ في البيانات"); }
+  };
+</script>
+
 </body>
 </html>
