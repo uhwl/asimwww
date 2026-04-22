@@ -135,6 +135,7 @@ notifSound.load();
     };
 
     // مراقبة الرسائل الجديدة وتشغيل الصوت
+   // --- استبدل من هنا ---
     const q = query(collection(db, "messages"), orderBy("time", "asc"));
     onSnapshot(q, (snapshot) => {
         const container = document.getElementById('messages');
@@ -142,16 +143,31 @@ notifSound.load();
         snapshot.docChanges().forEach((change) => {
             if (change.type === "added") {
                 const data = change.doc.data();
-                // تشغيل الصوت إذا كانت الرسالة من شخص آخر
+                
+                // التأكد أن الرسالة جديدة (وصلت الآن وليست قديمة)
+                const isNewMessage = data.time && (Math.abs(Date.now() - data.time.toMillis()) < 10000);
+
                 if (data.user !== myName && data.email !== myEmail) {
-                    notifSound.play().catch(() => {});
-                    if (document.hidden && Notification.permission === "granted") {
-                        new Notification(`AsimTalk: ${data.user}`, { body: data.text });
+                    // تشغيل الصوت (حتى لو المتصفح في الخلفية)
+                    notifSound.play().catch((e) => console.log("الصوت يحتاج تفاعل"));
+
+                    // إشعار النظام
+                    if (Notification.permission === "granted") {
+                        const notification = new Notification(`AsimTalk: ${data.user}`, {
+                            body: data.text,
+                            icon: 'https://cdn-icons-png.flaticon.com/512/5962/5962461.png',
+                        });
+                        
+                        notification.onclick = function() {
+                            window.focus();
+                            this.close();
+                        };
                     }
                 }
             }
         });
 
+        // هذا الجزء المسؤول عن عرض الرسائل في الصفحة
         container.innerHTML = "";
         snapshot.forEach(d => {
             const data = d.data();
@@ -172,7 +188,7 @@ notifSound.load();
         });
         container.scrollTop = container.scrollHeight;
     });
-
+    // --- إلى هنا ---
     if ("Notification" in window) Notification.requestPermission();
 </script>
 
