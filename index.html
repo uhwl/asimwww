@@ -3,58 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | Pro</title>
+    <title>AsimTalk | Pro 🚀</title>
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         /* Header */
-        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; }
-        .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 10px; cursor: pointer; border-radius: 5px; margin-left: 5px; }
+        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 10px; cursor: pointer; border-radius: 5px; margin-left: 5px; font-size: 14px; }
         
         /* Messages Area */
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; position: relative; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); }
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; position: relative; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); cursor: pointer; }
         .user-name { color: var(--main-color); font-size: 11px; font-weight: bold; margin-bottom: 3px; display: block; }
         
-        /* Actions */
-        .actions { display: none; position: absolute; left: -70px; top: 5px; background: #222; border-radius: 4px; padding: 2px; }
-        .actions button { background: none; border: none; color: white; cursor: pointer; padding: 2px 5px; font-size: 12px; }
-        
+        /* Actions (Edit/Delete) */
+        .actions { display: none; position: absolute; left: -75px; top: 50%; transform: translateY(-50%); background: #222; border: 1px solid var(--main-color); border-radius: 5px; padding: 5px; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+        .actions button { background: none; border: none; color: white; cursor: pointer; padding: 5px; font-size: 14px; }
+
         /* Settings Modal */
-        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border: 2px solid var(--main-color); z-index: 100; border-radius: 10px; width: 300px; }
-        #settingsModal input { width: 90%; padding: 10px; margin: 10px 0; background: #333; color: white; border: 1px solid #444; }
+        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 12px; width: 85%; max-width: 350px; box-shadow: 0 0 30px #000; }
+        #settingsModal h3 { margin-top: 0; color: var(--main-color); }
+        #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
 
         /* Input Area */
-        #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; }
+        #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
         input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
+        input#chatInput:focus { border-color: var(--main-color); }
+        #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <div style="font-weight: bold;">⚡ AsimTalk</div>
+    <div style="font-weight: bold; font-size: 20px;">⚡ AsimTalk</div>
     <div class="nav-btns">
         <button onclick="startCall()">📞 مكالمة</button>
-        <button onclick="toggleSettings()">⚙️ الإعدادات</button>
+        <button onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
 
 <div id="messages"></div>
 
 <div id="settingsModal">
-    <h3>إعدادات الحساب</h3>
+    <h3>⚙️ إعدادات الحساب</h3>
     <label>الاسم المستعار:</label>
     <input type="text" id="setUserName">
     <label>الايميل (للمزامنة):</label>
     <input type="email" id="setUserEmail" placeholder="example@mail.com">
-    <button onclick="saveSettings()" style="width: 100%; padding: 10px; background: var(--main-color); border: none; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
-    <button onclick="toggleSettings()" style="width: 100%; margin-top: 5px; background: #444; color: white; border: none; padding: 5px; cursor: pointer;">إغلاق</button>
+    <button onclick="saveSettings()" style="width: 100%; padding: 12px; background: var(--main-color); border: none; font-weight: bold; cursor: pointer; border-radius: 5px;">حفظ التغييرات</button>
+    <button onclick="toggleSettings()" style="width: 100%; margin-top: 10px; background: #333; color: white; border: none; padding: 8px; cursor: pointer; border-radius: 5px;">إغلاق</button>
 </div>
 
 <div id="input-area">
     <input type="text" id="chatInput" placeholder="اكتب رسالتك واضغط Enter..." onkeydown="if(event.key==='Enter') sendMsg()">
-    <button onclick="sendMsg()" style="background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">إرسال</button>
+    <button id="sendBtn" onclick="sendMsg()">إرسال</button>
 </div>
 
 <script type="module">
@@ -73,34 +76,33 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // تحميل البيانات
+    // تعريف صوت الإشعار
+    const notifSound = new Audio('notif.mp3');
+
+    // تحميل البيانات المحفوظة
     let myName = localStorage.getItem('chatName') || "مستخدم_" + Math.floor(Math.random()*99);
     let myEmail = localStorage.getItem('chatEmail') || "";
     document.getElementById('setUserName').value = myName;
     document.getElementById('setUserEmail').value = myEmail;
 
-    // دوال الإعدادات
     window.toggleSettings = () => {
         const modal = document.getElementById('settingsModal');
         modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
     };
 
     window.saveSettings = () => {
-        const newName = document.getElementById('setUserName').value;
-        const newEmail = document.getElementById('setUserEmail').value;
-        localStorage.setItem('chatName', newName);
-        localStorage.setItem('chatEmail', newEmail);
-        myName = newName;
-        alert("تم الحفظ! سيتم تحديث هويتك في الرسائل القادمة.");
+        myName = document.getElementById('setUserName').value;
+        myEmail = document.getElementById('setUserEmail').value;
+        localStorage.setItem('chatName', myName);
+        localStorage.setItem('chatEmail', myEmail);
+        alert("تم الحفظ بنجاح! ✅");
         toggleSettings();
     };
 
     window.startCall = () => {
-        alert("جاري بدء المكالمة... (هذه الميزة تتطلب سيرفر WebRTC، سيتم توجيهك لغرفة مؤقتة)");
-        window.open("https://meet.jit.si/AsimTalkRoom", "_blank");
+        window.open("https://meet.jit.si/AsimTalk-CallRoom", "_blank");
     };
 
-    // الإرسال
     window.sendMsg = async () => {
         const input = document.getElementById('chatInput');
         if(!input.value.trim()) return;
@@ -113,35 +115,49 @@
         input.value = "";
     };
 
-    // الحذف والتعديل
     window.showActions = (id) => {
         const el = document.getElementById('actions-' + id);
         if(el) {
             el.style.display = 'block';
-            setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
+            if (window['t'+id]) clearTimeout(window['t'+id]);
+            window['t'+id] = setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
         }
     };
 
     window.deleteMsg = async (id) => {
-        await deleteDoc(doc(db, "messages", id)); // حذف فوراً
+        await deleteDoc(doc(db, "messages", id));
     };
 
     window.editMsg = async (id, oldText) => {
-        const newText = prompt("تعديل:", oldText);
+        const newText = prompt("تعديل الرسالة:", oldText);
         if(newText) await updateDoc(doc(db, "messages", id), { text: newText });
     };
 
-    // استلام الرسائل
+    // مراقبة الرسائل الجديدة وتشغيل الصوت
     const q = query(collection(db, "messages"), orderBy("time", "asc"));
     onSnapshot(q, (snapshot) => {
         const container = document.getElementById('messages');
+        
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const data = change.doc.data();
+                // تشغيل الصوت إذا كانت الرسالة من شخص آخر
+                if (data.user !== myName && data.email !== myEmail) {
+                    notifSound.play().catch(() => {});
+                    if (document.hidden && Notification.permission === "granted") {
+                        new Notification(`AsimTalk: ${data.user}`, { body: data.text });
+                    }
+                }
+            }
+        });
+
         container.innerHTML = "";
         snapshot.forEach(d => {
             const data = d.data();
-            const isMe = data.user === myName || (data.email && data.email === myEmail);
+            const isMe = data.user === myName || (myEmail !== "" && data.email === myEmail);
             const div = document.createElement('div');
             div.className = 'msg';
-            if(isMe) div.onclick = () => showActions(d.id);
+            if(isMe) div.onclick = (e) => { e.stopPropagation(); showActions(d.id); };
             
             div.innerHTML = `
                 <span class="user-name">${data.user}</span>
@@ -155,6 +171,8 @@
         });
         container.scrollTop = container.scrollHeight;
     });
+
+    if ("Notification" in window) Notification.requestPermission();
 </script>
 
 </body>
