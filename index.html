@@ -3,41 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | مجلس الرهيبين</title>
+    <title>AsimTalk | المجلس المطور</title>
     <style>
-        body { background: #0e0e0e; color: #00ff00; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        #chat-header { background: #1a1a1a; padding: 15px; text-align: center; border-bottom: 2px solid #00ff00; font-weight: bold; }
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: #1a1a1a; padding: 10px 15px; border-radius: 10px; border-right: 4px solid #00ff00; max-width: 80%; align-self: flex-start; }
-        #input-area { background: #1a1a1a; padding: 20px; display: flex; gap: 10px; border-top: 1px solid #333; }
-        input { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: #fff; border-radius: 5px; outline: none; }
-        input:focus { border-color: #00ff00; }
-        button { padding: 10px 25px; background: #00ff00; border: none; color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #00cc00; }
+        :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
+        body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        #header { background: var(--panel-bg); padding: 15px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; }
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { background: var(--panel-bg); padding: 10px 15px; border-radius: 8px; position: relative; max-width: 70%; align-self: flex-start; border-right: 3px solid var(--main-color); }
+        .msg:hover .actions { display: block; }
+        .actions { display: none; position: absolute; left: -60px; top: 5px; }
+        .actions button { font-size: 10px; padding: 3px; cursor: pointer; background: #333; color: white; border: 1px solid #555; }
+        .user-name { color: var(--main-color); font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; }
+        #input-area { background: var(--panel-bg); padding: 20px; display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; }
+        button { background: var(--main-color); color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="chat-header">⚡ AsimTalk - شات عاصم ⚡</div>
+<div id="header">
+    <div>⚡ AsimTalk</div>
+    <div id="userInfo">مرحباً بك</div>
+</div>
 
-<div id="messages" id="messageList">
-    </div>
+<div id="messages"></div>
 
 <div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب رسالتك يا وحش...">
-    <button onclick="sendMsg()">إرسال 🚀</button>
+    <input type="text" id="chatInput" placeholder="اكتب رسالتك...">
+    <button onclick="sendMsg()">إرسال</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // المعلومات الخاصة بمشروعك
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
         authDomain: "asimtalk-8a037.firebaseapp.com",
         projectId: "asimtalk-8a037",
-        storageBucket: "", // خليناه فاضي عشان نتجنب المشكلة السابقة
+        storageBucket: "",
         messagingSenderId: "76554634749",
         appId: "1:76554634749:web:a8e4eeb9a96cf578c90594"
     };
@@ -45,37 +49,70 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // دالة إرسال الرسالة
-    window.sendMsg = async () => {
-        const input = document.getElementById('chatInput');
-        const text = input.value;
-        if(text.trim() == "") return;
+    // 1. نظام الاسم والتحقق
+    let myName = localStorage.getItem('chatName');
+    if (!myName) {
+        myName = prompt("أهلاً بك في AsimTalk! اختر اسمك المستعار:");
+        if(!myName) myName = "ضيف_" + Math.floor(Math.random() * 1000);
+        localStorage.setItem('chatName', myName);
+    }
+    document.getElementById('userInfo').innerText = "الاسم: " + myName;
 
-        try {
-            await addDoc(collection(db, "messages"), {
-                text: text,
-                time: serverTimestamp(),
-                user: "عاصم" // تقدر تغيرها لاحقاً لتجيب اسم المستخدم الحقيقي
-            });
-            input.value = "";
-        } catch (e) {
-            alert("خطأ في الإرسال، تأكد من إعدادات الـ Rules في Firestore");
-        }
+    // 2. طلب إذن الإشعارات
+    if ("Notification" in window) {
+        Notification.requestPermission();
+    }
+
+    // 3. دالة الإرسال
+    window.sendMsg = async () => {
+        const text = document.getElementById('chatInput').value;
+        if(text.trim() == "") return;
+        await addDoc(collection(db, "messages"), {
+            text: text,
+            user: myName,
+            time: serverTimestamp()
+        });
+        document.getElementById('chatInput').value = "";
     };
 
-    // استلام الرسايل مباشرة (Real-time)
+    // 4. دالة الحذف والتعديل
+    window.editMsg = async (id, oldText) => {
+        const newText = prompt("عدل رسالتك:", oldText);
+        if(newText) await updateDoc(doc(db, "messages", id), { text: newText });
+    };
+
+    window.deleteMsg = async (id) => {
+        if(confirm("هل تريد حذف الرسالة؟")) await deleteDoc(doc(db, "messages", id));
+    };
+
+    // 5. استلام الرسائل المباشر
     const q = query(collection(db, "messages"), orderBy("time", "asc"));
     onSnapshot(q, (snapshot) => {
-        const msgContainer = document.getElementById('messages');
-        msgContainer.innerHTML = "";
-        snapshot.forEach(doc => {
-            const data = doc.data();
+        const container = document.getElementById('messages');
+        container.innerHTML = "";
+        snapshot.forEach(d => {
+            const data = d.data();
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
-            msgContainer.appendChild(div);
+            
+            // إضافة أزرار التحكم إذا كانت الرسالة لي
+            let actions = "";
+            if(data.user === myName) {
+                actions = `<div class="actions">
+                    <button onclick="editMsg('${d.id}', '${data.text}')">تعديل</button>
+                    <button onclick="deleteMsg('${d.id}')">حذف</button>
+                </div>`;
+            }
+
+            div.innerHTML = `<span class="user-name">${data.user}</span> ${data.text} ${actions}`;
+            container.appendChild(div);
+
+            // إرسال إشعار إذا كانت الرسالة من شخص آخر والموقع في الخلفية
+            if (data.user !== myName && document.hidden) {
+                new Notification(`AsimTalk: ${data.user}`, { body: data.text });
+            }
         });
-        msgContainer.scrollTop = msgContainer.scrollHeight;
+        container.scrollTop = container.scrollHeight;
     });
 </script>
 
