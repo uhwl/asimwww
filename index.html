@@ -9,33 +9,48 @@
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
         #header { background: var(--panel-bg); padding: 15px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; }
         #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { background: var(--panel-bg); padding: 10px 15px; border-radius: 8px; position: relative; max-width: 70%; align-self: flex-start; border-right: 3px solid var(--main-color); }
-        .msg:hover .actions { display: block; }
-       .actions {  display: none; position: absolute; left: -80px; top: 5px; transition: opacity 0.5s;}
-        .actions button { font-size: 10px; padding: 3px; cursor: pointer; background: #333; color: white; border: 1px solid #555; }
+        .msg { background: var(--panel-bg); padding: 10px 15px; border-radius: 8px; position: relative; max-width: 70%; align-self: flex-start; border-right: 3px solid var(--main-color); transition: 0.3s; }
+        
+        /* تصميم أزرار التحكم */
+        .actions { 
+            display: none; 
+            position: absolute; 
+            left: -90px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: #222; 
+            padding: 5px; 
+            border-radius: 5px; 
+            border: 1px solid var(--main-color);
+            z-index: 10;
+        }
+        .actions button { font-size: 10px; padding: 4px 8px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 3px; margin: 0 2px; }
+        .actions button:hover { background: var(--main-color); color: black; }
+
         .user-name { color: var(--main-color); font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; }
         #input-area { background: var(--panel-bg); padding: 20px; display: flex; gap: 10px; }
-        input { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; }
-        button { background: var(--main-color); color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        input { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
+        input:focus { border-color: var(--main-color); }
+        button#sendBtn { background: var(--main-color); color: black; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="header">
     <div>⚡ AsimTalk</div>
-    <div id="userInfo">مرحباً بك</div>
+    <div id="userInfo">جاري التحقق...</div>
 </div>
 
 <div id="messages"></div>
 
 <div id="input-area">
     <input type="text" id="chatInput" placeholder="اكتب رسالتك...">
-    <button onclick="sendMsg()">إرسال</button>
+    <button id="sendBtn" onclick="sendMsg()">إرسال</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, deleteDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
@@ -49,92 +64,94 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 1. نظام الاسم والتحقق
-    let myName = localStorage.getItem('chatName');
-    if (!myName) {
-        myName = prompt("أهلاً بك في AsimTalk! اختر اسمك المستعار:");
-        if(!myName) myName = "ضيف_" + Math.floor(Math.random() * 1000);
-        localStorage.setItem('chatName', myName);
+    // 1. نظام الاسم المطور (منع التكرار)
+    async function setupUser() {
+        let name = localStorage.getItem('chatName');
+        if (!name) {
+            name = prompt("اختر اسمك المستعار (ممنوع التكرار):");
+            if (!name) name = "User_" + Math.floor(Math.random() * 999);
+            
+            // تحقق إذا الاسم موجود في قاعدة البيانات
+            const q = query(collection(db, "messages"), where("user", "==", name));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty && name !== "عاصم") {
+                alert("هذا الاسم مستخدم من قبل، سيتم إضافة رقم عشوائي لاسمك.");
+                name += Math.floor(Math.random() * 100);
+            }
+            
+            localStorage.setItem('chatName', name);
+        }
+        document.getElementById('userInfo').innerText = "أهلاً: " + name;
+        return name;
     }
-    document.getElementById('userInfo').innerText = "الاسم: " + myName;
 
-    // 2. طلب إذن الإشعارات
-    if ("Notification" in window) {
-        Notification.requestPermission();
-    }
+    const myName = await setupUser();
 
-    // 3. دالة الإرسال
+    // 2. الإشعارات
+    if ("Notification" in window) { Notification.requestPermission(); }
+
+    // 3. الإرسال
     window.sendMsg = async () => {
-        const text = document.getElementById('chatInput').value;
-        if(text.trim() == "") return;
+        const input = document.getElementById('chatInput');
+        if(input.value.trim() == "") return;
         await addDoc(collection(db, "messages"), {
-            text: text,
+            text: input.value,
             user: myName,
             time: serverTimestamp()
         });
-        document.getElementById('chatInput').value = "";
+        input.value = "";
     };
 
-    // 4. دالة الحذف والتعديل
+    // 4. الحذف والتعديل
     window.editMsg = async (id, oldText) => {
-        const newText = prompt("عدل رسالتك:", oldText);
-        if(newText) await updateDoc(doc(db, "messages", id), { text: newText });
+        const newText = prompt("تعديل الرسالة:", oldText);
+        if(newText && newText !== oldText) await updateDoc(doc(db, "messages", id), { text: newText });
     };
 
     window.deleteMsg = async (id) => {
-        if(confirm("هل تريد حذف الرسالة؟")) await deleteDoc(doc(db, "messages", id));
+        if(confirm("حذف الرسالة نهائياً؟")) await deleteDoc(doc(db, "messages", id));
     };
 
-    // 5. استلام الرسائل المباشر
-    // استلام الرسائل المباشر
+    // 5. إظهار وإخفاء الأزرار (3 ثواني)
+    window.showActions = (id) => {
+        const el = document.getElementById('actions-' + id);
+        if(el) {
+            el.style.display = 'block';
+            if (window['t'+id]) clearTimeout(window['t'+id]);
+            window['t'+id] = setTimeout(() => { el.style.display = 'none'; }, 3000);
+        }
+    };
+
+    // 6. عرض الرسائل
     const q = query(collection(db, "messages"), orderBy("time", "asc"));
     onSnapshot(q, (snapshot) => {
         const container = document.getElementById('messages');
         container.innerHTML = "";
         snapshot.forEach(d => {
             const data = d.data();
+            const isMe = data.user === myName;
             const div = document.createElement('div');
             div.className = 'msg';
-            div.id = "msg-" + d.id; // نعطي كل رسالة ID خاص
+            if (isMe) div.onclick = () => showActions(d.id);
 
-            // إذا كانت الرسالة حقتك، بنضيف لها خاصية إظهار الأزرار عند اللمس أو الماوس
-            if(data.user === myName) {
-                div.onmouseenter = () => showActions(d.id); // للكمبيوتر
-                div.onclick = () => showActions(d.id);      // للجوال
-                
-                div.innerHTML = `
-                    <span class="user-name">${data.user}</span> 
-                    ${data.text} 
-                    <div id="actions-${d.id}" class="actions">
-                        <button onclick="editMsg('${d.id}', '${data.text}')">تعديل</button>
-                        <button onclick="deleteMsg('${d.id}')">حذف</button>
-                    </div>`;
-            } else {
-                div.innerHTML = `<span class="user-name">${data.user}</span> ${data.text}`;
-            }
-
+            div.innerHTML = `
+                <span class="user-name">${data.user}</span>
+                <div>${data.text}</div>
+                ${isMe ? `
+                <div id="actions-${d.id}" class="actions">
+                    <button onclick="editMsg('${d.id}', '${data.text}')">✏️</button>
+                    <button onclick="deleteMsg('${d.id}')">🗑️</button>
+                </div>` : ''}
+            `;
             container.appendChild(div);
+
+            if (!isMe && document.hidden) {
+                new Notification(`رسالة من ${data.user}`, { body: data.text });
+            }
         });
         container.scrollTop = container.scrollHeight;
     });
-
-    // دالة إظهار الأزرار وإخفائها بعد 3 ثواني
-    window.showActions = (id) => {
-        const actionDiv = document.getElementById('actions-' + id);
-        if (actionDiv) {
-            actionDiv.style.display = "block"; // أظهرها
-            actionDiv.style.opacity = "1";
-
-            // إذا كان فيه مؤقت سابق شغال، نلغيه ونبدأ واحد جديد
-            if (window['timer-' + id]) clearTimeout(window['timer-' + id]);
-
-            // بعد 3000 ميلي ثانية (3 ثواني) تختفي
-            window['timer-' + id] = setTimeout(() => {
-                actionDiv.style.opacity = "0";
-                setTimeout(() => { actionDiv.style.display = "none"; }, 500); // تختفي تماماً بعد تأثير التلاشي
-            }, 3000);
-        }
-    };
 </script>
 
 </body>
