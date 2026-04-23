@@ -3,99 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | V3.5.5vpro</title>
+    <title>AsimTalk | V3.5.6vpro</title>
     <style>
-        :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
+        :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; --btn-gray: #333; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: 0.5s; }
         
-        /* الثيمات العامة */
         body.theme-blue { --main-color: #0088ff; }
         body.theme-red { --main-color: #ff0044; }
         body.theme-gold { --main-color: #ffd700; }
-        body.theme-purple { --main-color: #a020f0; }
 
-        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .nav-btns { display: flex; gap: 10px; }
-        .nav-btns button { background: #222; border: 1px solid var(--main-color); color: var(--main-color); padding: 8px 15px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .nav-btns button:hover { background: var(--main-color); color: black; }
+        /* ستايل التحديث الإجباري */
+        #updateOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; justify-content: center; align-items: center; text-align: center; }
 
-        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 15px; gap: 20px; align-items: center; overflow-x: auto; min-height: 110px; animation: slideDown 0.3s; }
-        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .nav-btns button { background: var(--btn-gray); border: 1px solid #555; color: #ccc; padding: 8px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; }
 
-        .avatar-container { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 90px; }
-        .avatar { width: 65px; height: 65px; background: #004d4d; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 4px solid #333; transition: 0.2s; }
-        .avatar.speaking { border-color: #00ff00 !important; box-shadow: 0 0 25px #00ff00; transform: scale(1.05); }
-        .name-label { font-size: 12px; color: #eee; margin-top: 5px; font-weight: bold; }
+        /* بار المكالمة الأسود */
+        #callBar { display: none; background: #000; border-bottom: 2px solid #222; padding: 15px; gap: 20px; align-items: center; min-height: 100px; }
+        .avatar-container { position: relative; display: flex; flex-direction: column; align-items: center; }
+        .avatar { width: 60px; height: 60px; background: #222; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 4px solid #444; }
+        .avatar.speaking { border-color: var(--main-color) !important; box-shadow: 0 0 15px var(--main-color); }
 
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: radial-gradient(circle at center, #111 0%, #000 100%); }
-        .msg { background: var(--panel-bg); padding: 14px; border-radius: 12px; max-width: 80%; align-self: flex-start; border-right: 4px solid var(--main-color); box-shadow: 4px 4px 10px rgba(0,0,0,0.3); }
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: var(--panel-bg); padding: 12px; border-radius: 10px; max-width: 80%; align-self: flex-start; border-right: 4px solid var(--main-color); cursor: pointer; }
+        .actions { display: none; margin-top: 8px; border-top: 1px solid #333; padding-top: 5px; gap: 15px; font-size: 12px; }
 
-        /* مودال الإعدادات المطور */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 20px; width: 320px; box-shadow: 0 0 40px #000; }
-        .modal h3 { margin-top: 0; color: var(--main-color); border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .modal input { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #444; color: white; border-radius: 10px; box-sizing: border-box; }
-        .admin-section { margin-top: 20px; padding: 15px; background: #222; border-radius: 12px; border: 1px dashed gold; }
-
-        #input-area { background: var(--panel-bg); padding: 20px; display: flex; gap: 12px; border-top: 1px solid #333; }
-        #chatInput { flex-grow: 1; padding: 15px; background: #000; border: 1px solid #444; color: white; border-radius: 12px; outline: none; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #111; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 15px; width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 5px; box-sizing: border-box; }
         
-        #crashOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; justify-content: center; align-items: center; color: red; text-align: center; font-family: 'Courier New', Courier, monospace; }
+        #crashOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; justify-content: center; align-items: center; color: red; }
     </style>
 </head>
-<body id="mainBody">
+<body>
 
-<div id="crashOverlay">
-    <h1 style="font-size: 50px;">ACCESS DENIED</h1>
-    <p>لقد تم تجميد نظامك بواسطة العاصم (Admin)</p>
+<div id="updateOverlay">
+    <div>
+        <h2 style="color:var(--main-color)">تحديث جديد متاح! 🚀</h2>
+        <p>قام الأدمن بتحديث الموقع، يرجى الضغط أسفل للمتابعة</p>
+        <button onclick="location.reload()" style="padding:15px 30px; background:var(--main-color); border:none; border-radius:10px; cursor:pointer; font-weight:bold;">تحديث الآن</button>
+    </div>
 </div>
 
+<div id="crashOverlay"><h1>FREEZED BY ADMIN</h1></div>
+
 <div id="header">
-    <div style="font-weight: bold; font-size: 20px; letter-spacing: 1px;">AsimTalk <span style="color:var(--main-color)">vpro</span></div>
+    <div style="font-weight:bold;">AsimTalk <span style="color:var(--main-color)">vpro</span></div>
     <div class="nav-btns">
-        <button id="callToggleBtn" onclick="toggleCallInterface()">📞 إنشاء مكالمة</button>
-        <button onclick="openModal('settingsModal')">⚙️ الإعدادات</button>
+        <button onclick="toggleCallBar()">📞 مكالمة</button>
+        <button onclick="openModal('settingsModal')">⚙️</button>
     </div>
 </div>
 
 <div id="callBar">
     <div id="participantsList" style="display: flex; gap: 20px;"></div>
-    <div style="margin-right: auto; display: flex; gap: 10px;">
-        <button id="joinBtn" onclick="joinVoice()" style="background:var(--main-color); color:black; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">انضمام</button>
-        <button id="leaveBtn" onclick="leaveVoice()" style="background:red; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; display:none;">مغادرة</button>
-    </div>
+    <button id="joinBtn" onclick="joinVoice()" style="margin-right:auto; background:var(--main-color); border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">انضمام</button>
 </div>
 
 <div id="messages"></div>
 
 <div id="settingsModal" class="modal">
-    <h3>⚙️ إعدادات الحساب</h3>
-    <input type="text" id="setUserName" placeholder="الاسم المستعار">
-    <input type="email" id="setUserEmail" placeholder="البريد الإلكتروني">
-    <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--main-color); border:none; border-radius:10px; font-weight:bold; cursor:pointer;">حفظ البيانات</button>
+    <h3>⚙️ الإعدادات</h3>
+    <input type="text" id="uName" placeholder="الاسم">
+    <input type="email" id="uEmail" placeholder="الايميل">
+    <button onclick="saveSets()" style="width:100%; padding:10px; background:var(--main-color); border:none; border-radius:5px; font-weight:bold;">حفظ</button>
     
-    <div id="adminSecretSection" style="display: none;" class="admin-section">
-        <h4 style="color:gold; margin:0 0 10px 0;">🛡️ لوحة التحكم vpro</h4>
-        <select id="themeSelect" onchange="updateGlobalTheme(this.value)" style="width:100%; padding:8px; background:#111; color:white; border-radius:5px;">
-            <option value="">ثيم: أخضر (افتراضي)</option>
-            <option value="theme-blue">ثيم: أزرق ملكي</option>
-            <option value="theme-red">ثيم: أحمر ناري</option>
-            <option value="theme-gold">ثيم: ذهبي</option>
-            <option value="theme-purple">ثيم: بنفسجي</option>
-        </select>
-        <p style="font-size: 10px; color: #888; margin-top: 10px;">* أي تغيير هنا سيظهر لجميع المستخدمين فوراً.</p>
+    <div id="adminZone" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+        <button onclick="pushUpdate()" style="width:100%; background:orange; margin-bottom:5px;">إرسال إشعار تحديث للكل</button>
+        <button onclick="changeGlobalTheme()" style="width:100%; background:blue; color:white;">تغيير ثيم الكل</button>
     </div>
-    
-    <button onclick="closeModal('settingsModal')" style="width:100%; margin-top:10px; background:#333; color:white; border:none; padding:8px; border-radius:10px; cursor:pointer;">إغلاق</button>
 </div>
 
-<div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب رسالتك هنا..." onkeydown="if(event.key==='Enter') sendMsg()">
-    <button onclick="sendMsg()" style="background:var(--main-color); border:none; padding:10px 25px; border-radius:12px; font-weight:bold; color:black; cursor:pointer;">إرسال</button>
+<div id="input-area" style="padding:15px; display:flex; gap:10px; background:#1a1a1a;">
+    <input type="text" id="chatInput" placeholder="اكتب..." style="flex-grow:1;" onkeydown="if(event.key==='Enter') send()">
+    <button onclick="send()" style="background:var(--main-color); border:none; padding:0 20px; border-radius:5px; font-weight:bold; color:black;">إرسال</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
@@ -108,114 +93,91 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const vID = "3.5.6"; // نسخة الموقع الحالية
 
-    let myName = localStorage.getItem('chatName');
-    let myEmail = localStorage.getItem('chatEmail');
-    const isAsimAdmin = (myName === "عاصم" && myEmail === "nza76667@gmail.com");
+    let myName = localStorage.getItem('chatName') || "مستخدم " + Math.floor(Math.random()*100);
+    let myEmail = localStorage.getItem('chatEmail') || "";
+    const isAdmin = (myName === "عاصم" && myEmail === "nza76667@gmail.com");
 
-    // --- مزامنة الثيم للكل ---
+    // --- نظام التحديث والأدمن ---
     onSnapshot(doc(db, "settings", "global"), (s) => {
-        if(s.exists()) document.body.className = s.data().theme || "";
+        if(s.exists()){
+            if(s.data().version !== vID) document.getElementById('updateOverlay').style.display = 'flex';
+            document.body.className = s.data().theme || "";
+        }
     });
 
-    // --- التسمية التلقائية ---
-    if (!myName) {
-        onSnapshot(collection(db, "active_calls"), (snap) => {
-            if (!localStorage.getItem('chatName')) {
-                let newName = "مستخدم " + (snap.size + 1);
-                localStorage.setItem('chatName', newName);
-                location.reload();
-            }
-        });
-    }
+    if(isAdmin) document.getElementById('adminZone').style.display = 'block';
 
-    if(isAsimAdmin) document.getElementById('adminSecretSection').style.display = 'block';
+    window.pushUpdate = async () => await updateDoc(doc(db, "settings", "global"), { version: "new_" + Math.random() });
+    window.changeGlobalTheme = async () => {
+        const themes = ['', 'theme-blue', 'theme-red', 'theme-gold'];
+        const current = document.body.className;
+        let next = themes[(themes.indexOf(current) + 1) % themes.length];
+        await updateDoc(doc(db, "settings", "global"), { theme: next });
+    };
 
-    // --- مراقبة الطرد والكراش ---
-    onSnapshot(doc(db, "active_calls", myName || "guest"), (s) => {
-        if(!s.exists() && isInCall) { leaveVoice(); alert("تم طردك من المكالمة!"); }
-        if(s.exists() && s.data().isCrashed) document.getElementById('crashOverlay').style.display = 'flex';
-        else document.getElementById('crashOverlay').style.display = 'none';
-    });
-
-    let isInCall = false;
-    let localStream;
-
-    window.toggleCallInterface = () => {
-        const bar = document.getElementById('callBar');
-        bar.style.display = (bar.style.display === 'flex' ? 'none' : 'flex');
+    // --- نظام المكالمة المزامنة ---
+    let isIn = false;
+    window.toggleCallBar = () => {
+        const b = document.getElementById('callBar');
+        b.style.display = (b.style.display === 'flex' ? 'none' : 'flex');
     };
 
     window.joinVoice = async () => {
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            isInCall = true;
-            await setDoc(doc(db, "active_calls", myName), { 
-                name: myName, initials: myName.substring(0, 2), isSpeaking: false, isCrashed: false 
-            });
-            
-            const audioCtx = new AudioContext();
-            const source = audioCtx.createMediaStreamSource(localStream);
-            const analyser = audioCtx.createAnalyser();
-            source.connect(analyser);
-            const data = new Uint8Array(analyser.frequencyBinCount);
-
-            const checkMic = () => {
-                if(!isInCall) return;
-                analyser.getByteFrequencyData(data);
-                let v = data.reduce((a, b) => a + b) / data.length;
-                updateDoc(doc(db, "active_calls", myName), { isSpeaking: v > 0.5 });
-                requestAnimationFrame(checkMic);
-            };
-            checkMic();
-        } catch (e) { alert("يجب السماح بالمايك!"); }
-    };
-
-    window.leaveVoice = async () => {
-        isInCall = false;
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
-        await deleteDoc(doc(db, "active_calls", myName));
-        document.getElementById('joinBtn').style.display = 'block';
-        document.getElementById('leaveBtn').style.display = 'none';
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        isIn = true;
+        await setDoc(doc(db, "active_calls", myName), { name: myName, isSpeaking: false, isCrashed: false });
+        // كود الحساسية
+        const ctx = new AudioContext();
+        const analyzer = ctx.createAnalyser();
+        ctx.createMediaStreamSource(stream).connect(analyzer);
+        const data = new Uint8Array(analyzer.frequencyBinCount);
+        const check = () => {
+            if(!isIn) return;
+            analyzer.getByteFrequencyData(data);
+            let vol = data.reduce((a,b)=>a+b)/data.length;
+            updateDoc(doc(db, "active_calls", myName), { isSpeaking: vol > 0.5 });
+            requestAnimationFrame(check);
+        };
+        check();
     };
 
     onSnapshot(collection(db, "active_calls"), (snap) => {
         const list = document.getElementById('participantsList');
+        const bar = document.getElementById('callBar');
+        if(snap.empty) { bar.style.display = 'none'; return; }
         list.innerHTML = "";
         let foundMe = false;
         snap.forEach(d => {
             const u = d.data();
-            if(u.name === myName) foundMe = true;
+            if(u.name === myName) {
+                foundMe = true;
+                if(u.isCrashed) document.getElementById('crashOverlay').style.display = 'flex';
+                else document.getElementById('crashOverlay').style.display = 'none';
+            }
             list.innerHTML += `
                 <div class="avatar-container">
-                    <div class="avatar ${u.isSpeaking ? 'speaking' : ''}">${u.initials}</div>
-                    <span class="name-label">${u.name}</span>
-                    ${isAsimAdmin && u.name !== myName ? `
-                        <div style="display:flex; gap:3px; margin-top:5px;">
-                            <button onclick="window.kickUser('${u.name}')" style="background:red; border:none; font-size:9px; color:white; padding:2px 5px; border-radius:3px; cursor:pointer;">طرد</button>
-                            <button onclick="window.crashUser('${u.name}', ${u.isCrashed})" style="background:orange; border:none; font-size:9px; padding:2px 5px; border-radius:3px; cursor:pointer;">كراش</button>
-                        </div>
-                    ` : ''}
+                    <div class="avatar ${u.isSpeaking?'speaking':''}" style="font-size:12px;">${u.name.substring(0,2)}</div>
+                    <span style="font-size:10px;">${u.name}</span>
+                    ${isAdmin && u.name !== myName ? `
+                        <button onclick="window.kik('${u.name}')" style="background:red; font-size:8px;">طرد</button>
+                        <button onclick="window.crs('${u.name}',${u.isCrashed})" style="background:orange; font-size:8px;">كرش</button>
+                    `:''}
                 </div>`;
         });
         document.getElementById('joinBtn').style.display = foundMe ? 'none' : 'block';
-        document.getElementById('leaveBtn').style.display = foundMe ? 'block' : 'none';
     });
 
-    // --- وظائف الأدمن الجلوبال ---
-    window.updateGlobalTheme = async (newTheme) => {
-        await setDoc(doc(db, "settings", "global"), { theme: newTheme });
-    };
+    window.kik = async (n) => await deleteDoc(doc(db, "active_calls", n));
+    window.crs = async (n, s) => await updateDoc(doc(db, "active_calls", n), { isCrashed: !s });
 
-    window.kickUser = async (user) => await deleteDoc(doc(db, "active_calls", user));
-    window.crashUser = async (user, status) => await updateDoc(doc(db, "active_calls", user), { isCrashed: !status });
-
-    // --- الشات ---
-    window.sendMsg = async () => {
+    // --- الشات والحذف والتعديل ---
+    window.send = async () => {
         const i = document.getElementById('chatInput');
         if(!i.value.trim()) return;
-        const text = i.value; i.value = "";
-        await addDoc(collection(db, "messages"), { text, user: myName, email: myEmail, time: serverTimestamp() });
+        const t = i.value; i.value = "";
+        await addDoc(collection(db, "messages"), { text: t, user: myName, time: serverTimestamp() });
     };
 
     onSnapshot(query(collection(db, "messages"), orderBy("time", "asc")), (snap) => {
@@ -223,25 +185,30 @@
         c.innerHTML = "";
         snap.forEach(d => {
             const data = d.data();
-            const mine = data.user === myName;
+            const isMe = data.user === myName;
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<span style="color:var(--main-color); font-size:10px; display:block;">${data.user}</span>${data.text}`;
+            div.onclick = () => { if(isMe) {
+                const a = div.querySelector('.actions');
+                a.style.display = a.style.display==='flex'?'none':'flex';
+            }};
+            div.innerHTML = `<b style="color:var(--main-color); font-size:10px;">${data.user}</b><div>${data.text}</div>
+                ${isMe?`<div class="actions"><span onclick="window.ed('${d.id}','${data.text}')">✏️</span><span onclick="window.dl('${d.id}')" style="color:red;">🗑️</span></div>`:''}`;
             c.appendChild(div);
         });
         c.scrollTop = c.scrollHeight;
     });
 
+    window.dl = async (id) => await deleteDoc(doc(db, "messages", id));
+    window.ed = async (id, old) => { const n = prompt("تعديل:", old); if(n) await updateDoc(doc(db, "messages", id), { text: n }); };
     window.openModal = (id) => document.getElementById(id).style.display = 'block';
-    window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-    window.saveSettings = () => {
-        localStorage.setItem('chatName', document.getElementById('setUserName').value);
-        localStorage.setItem('chatEmail', document.getElementById('setUserEmail').value);
+    window.saveSets = () => {
+        localStorage.setItem('chatName', document.getElementById('uName').value);
+        localStorage.setItem('chatEmail', document.getElementById('uEmail').value);
         location.reload();
     };
-
-    document.getElementById('setUserName').value = myName || "";
-    document.getElementById('setUserEmail').value = myEmail || "";
+    document.getElementById('uName').value = myName;
+    document.getElementById('uEmail').value = myEmail;
 </script>
 </body>
 </html>
