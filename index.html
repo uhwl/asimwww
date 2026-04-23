@@ -3,35 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | Private 🚀</title>
+    <title>AsimTalk | Pro 🚀</title>
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* الهيدر */
         #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
         .nav-btns { display: flex; gap: 10px; }
         .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
-
-        /* مستطيل المكالمة العلوي */
-        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 10px; display: flex; gap: 10px; align-items: center; overflow-x: auto; min-height: 60px; transition: 0.3s; }
-        .avatar { width: 45px; height: 45px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--main-color); font-size: 14px; flex-shrink: 0; position: relative; }
-        .avatar::after { content: attr(title); position: absolute; bottom: -15px; font-size: 9px; color: #888; }
-
-        /* الشات */
+        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 10px; display: flex; gap: 10px; align-items: center; overflow-x: auto; min-height: 60px; }
+        .avatar { width: 45px; height: 45px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--main-color); font-size: 14px; position: relative; }
         #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
-        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); position: relative; }
-        .user-tag { color: var(--main-color); font-size: 10px; font-weight: bold; display: block; margin-bottom: 4px; }
-
-        /* نافذة الإعدادات */
-        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 12px; width: 85%; max-width: 350px; box-shadow: 0 0 30px #000; }
-        #settingsModal h3 { margin-top: 0; color: var(--main-color); }
-        #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; outline: none; }
-
-        /* منطقة الإدخال */
+        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); cursor: pointer; position: relative; }
+        .actions { display: none; position: absolute; left: -75px; top: 50%; transform: translateY(-50%); background: #222; border: 1px solid var(--main-color); border-radius: 5px; padding: 5px; z-index: 10; }
+        .actions button { background: none; border: none; color: white; cursor: pointer; padding: 5px; font-size: 14px; }
+        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 12px; width: 85%; max-width: 350px; }
+        #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; }
         #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
         input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
-        #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; color: black; }
+        #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -53,12 +42,9 @@
 
 <div id="settingsModal">
     <h3>⚙️ الإعدادات</h3>
-    <label>الاسم المستعار:</label>
-    <input type="text" id="setUserName">
-    <label>الايميل:</label>
-    <input type="email" id="setUserEmail">
-    <button onclick="saveSettings()" style="width: 100%; padding: 12px; background: var(--main-color); border: none; font-weight: bold; cursor: pointer; border-radius: 5px; color: black;">حفظ التغييرات</button>
-    <button onclick="toggleSettings()" style="width: 100%; margin-top: 10px; background: #333; color: white; border: none; padding: 8px; cursor: pointer; border-radius: 5px;">إغلاق</button>
+    <input type="text" id="setUserName" placeholder="الاسم">
+    <input type="email" id="setUserEmail" placeholder="الايميل">
+    <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--main-color); border:none; border-radius:5px; font-weight:bold;">حفظ</button>
 </div>
 
 <div id="input-area">
@@ -66,9 +52,11 @@
     <button id="sendBtn" onclick="sendMsg()">إرسال</button>
 </div>
 
+<div id="remoteAudios"></div>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
@@ -90,32 +78,50 @@
 
     const getInitials = (n) => n.substring(0, 2);
 
-    // دالة فتح وإغلاق الإعدادات
     window.toggleSettings = () => {
-        const modal = document.getElementById('settingsModal');
-        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        const m = document.getElementById('settingsModal');
+        m.style.display = m.style.display === 'block' ? 'none' : 'block';
     };
 
-    window.saveSettings = () => {
-        myName = document.getElementById('setUserName').value;
+    window.saveSettings = async () => {
+        const newName = document.getElementById('setUserName').value.trim();
+        if(!newName) return;
+
+        // فحص إذا الاسم مأخوذ من شخص آخر
+        const qUsers = query(collection(db, "active_users"), where("name", "==", newName));
+        const check = await getDocs(qUsers);
+        
+        if(!check.empty && newName !== myName) {
+            alert("هذا الاسم مأخوذ، اختر اسم ثاني يا بطل!");
+            return;
+        }
+
+        myName = newName;
         myEmail = document.getElementById('setUserEmail').value;
         localStorage.setItem('chatName', myName);
         localStorage.setItem('chatEmail', myEmail);
+        
+        // تسجيل المستخدم في القائمة النشطة لمنع التكرار
+        await setDoc(doc(db, "active_users", myName), { name: myName, lastSeen: serverTimestamp() });
+        
         alert("تم الحفظ! ✅");
         toggleSettings();
-        location.reload(); // إعادة تحميل لتحديث الاسم في المكالمة
     };
 
-    // نظام المكالمة
+    // نظام المكالمة والصوت
     window.startVoiceCall = async () => {
         document.getElementById('callBar').style.display = 'flex';
         document.getElementById('callBtn').style.display = 'none';
-        await setDoc(doc(db, "active_calls", myName), {
-            name: myName,
-            initials: getInitials(myName),
-            joinedAt: serverTimestamp()
-        });
-        navigator.mediaDevices.getUserMedia({ audio: true }).catch(e => alert("يرجى تفعيل المايك"));
+        
+        await setDoc(doc(db, "active_calls", myName), { name: myName, initials: getInitials(myName) });
+        
+        // طلب إذن المايك لتفعيل الصوت
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("المايك شغال");
+        } catch(e) {
+            alert("لازم تفعل المايك عشان يسمعونك!");
+        }
     };
 
     window.endCall = async () => {
@@ -133,17 +139,26 @@
         });
     });
 
-    // الشات
+    // الشات مع التعديل والحذف
     window.sendMsg = async () => {
         const input = document.getElementById('chatInput');
         if(!input.value.trim()) return;
-        await addDoc(collection(db, "messages"), {
-            text: input.value,
-            user: myName,
-            email: myEmail,
-            time: serverTimestamp()
-        });
+        await addDoc(collection(db, "messages"), { text: input.value, user: myName, email: myEmail, time: serverTimestamp() });
         input.value = "";
+    };
+
+    window.showActions = (id) => {
+        const el = document.getElementById('actions-' + id);
+        if(el) {
+            el.style.display = 'block';
+            setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
+        }
+    };
+
+    window.deleteMsg = async (id) => { if(confirm("حذف؟")) await deleteDoc(doc(db, "messages", id)); };
+    window.editMsg = async (id, oldText) => {
+        const newText = prompt("تعديل:", oldText);
+        if(newText) await updateDoc(doc(db, "messages", id), { text: newText });
     };
 
     onSnapshot(query(collection(db, "messages"), orderBy("time", "asc")), (snap) => {
@@ -151,14 +166,22 @@
         container.innerHTML = "";
         snap.forEach(d => {
             const data = d.data();
+            const isMe = data.user === myName;
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<span class="user-tag">${data.user}</span><div>${data.text}</div>`;
+            if(isMe) div.onclick = () => showActions(d.id);
+            div.innerHTML = `
+                <span style="color:var(--main-color); font-size:10px;">${data.user}</span>
+                <div>${data.text}</div>
+                ${isMe ? `<div id="actions-${d.id}" class="actions">
+                    <button onclick="editMsg('${d.id}', '${data.text}')">✏️</button>
+                    <button onclick="deleteMsg('${d.id}')">🗑️</button>
+                </div>` : ''}
+            `;
             container.appendChild(div);
         });
         container.scrollTop = container.scrollHeight;
     });
-
 </script>
 </body>
 </html>
