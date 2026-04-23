@@ -3,24 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | Pro 🚀</title>
+    <title>AsimTalk | Pro V3</title>
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Header */
         #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .nav-btns { display: flex; gap: 10px; }
         .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
-        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 10px; display: flex; gap: 10px; align-items: center; overflow-x: auto; min-height: 60px; }
-        .avatar { width: 45px; height: 45px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--main-color); font-size: 14px; position: relative; }
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
-        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); cursor: pointer; position: relative; }
-        .actions { display: none; position: absolute; left: -75px; top: 50%; transform: translateY(-50%); background: #222; border: 1px solid var(--main-color); border-radius: 5px; padding: 5px; z-index: 10; }
-        .actions button { background: none; border: none; color: white; cursor: pointer; padding: 5px; font-size: 14px; }
-        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 12px; width: 85%; max-width: 350px; }
-        #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; }
+
+        /* Call Bar & Avatars */
+        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 15px; display: flex; gap: 15px; align-items: center; overflow-x: auto; min-height: 80px; }
+        .avatar { width: 50px; height: 50px; background: #004d4d; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid #333; transition: 0.3s; position: relative; }
+        .avatar.speaking { border-color: var(--main-color); box-shadow: 0 0 15px var(--main-color); transform: scale(1.1); }
+        .avatar::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; background: var(--main-color); border-radius: 50%; border: 2px solid #111; }
+
+        /* Messages */
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { background: var(--panel-bg); padding: 12px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 4px solid var(--main-color); cursor: pointer; position: relative; }
+        .actions { display: none; position: absolute; left: -80px; top: 50%; transform: translateY(-50%); background: #222; border: 1px solid var(--main-color); border-radius: 5px; padding: 5px; display: flex; gap: 5px; }
+        .actions button { background: none; border: none; color: white; cursor: pointer; font-size: 16px; }
+
+        /* Settings Modal (Centered) */
+        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 30px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 15px; width: 320px; box-shadow: 0 0 50px #000; text-align: center; }
+        #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        .ver { font-size: 10px; color: #666; margin-top: 15px; display: block; }
+
+        /* Input Area */
         #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
-        input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
-        #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
     </style>
 </head>
 <body>
@@ -28,35 +39,34 @@
 <div id="header">
     <div style="font-weight: bold; font-size: 18px;">⚡ AsimTalk</div>
     <div class="nav-btns">
-        <button onclick="startVoiceCall()" id="callBtn">📞 دخول</button>
+        <button onclick="joinVoice()" id="joinBtn">📞 دخول المكالمة</button>
         <button onclick="toggleSettings()">⚙️</button>
     </div>
 </div>
 
-<div id="callBar" style="display:none;">
+<div id="callBar">
     <div id="participantsList" style="display: flex; gap: 15px;"></div>
-    <button onclick="endCall()" style="background:red; color:white; border:none; border-radius:5px; padding:5px 10px; margin-right:auto; cursor:pointer;">مغادرة</button>
+    <button onclick="leaveVoice()" style="background:red; color:white; border:none; border-radius:5px; padding:5px 10px; margin-right:auto;">مغادرة</button>
 </div>
 
 <div id="messages"></div>
 
 <div id="settingsModal">
-    <h3>⚙️ الإعدادات</h3>
-    <input type="text" id="setUserName" placeholder="الاسم">
-    <input type="email" id="setUserEmail" placeholder="الايميل">
-    <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--main-color); border:none; border-radius:5px; font-weight:bold;">حفظ</button>
+    <h3 style="color:var(--main-color); margin-bottom:20px;">⚙️ الإعدادات</h3>
+    <input type="text" id="setUserName" placeholder="اسمك المستعار">
+    <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--main-color); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">حفظ التغييرات</button>
+    <button onclick="toggleSettings()" style="width:100%; margin-top:10px; background:#333; color:white; border:none; padding:8px; border-radius:8px; cursor:pointer;">إغلاق</button>
+    <span class="ver">إصدار النظام: V3.0.4 (WebRTC Enabled)</span>
 </div>
 
 <div id="input-area">
     <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter') sendMsg()">
-    <button id="sendBtn" onclick="sendMsg()">إرسال</button>
+    <button onclick="sendMsg()" style="background:var(--main-color); border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">إرسال</button>
 </div>
-
-<div id="remoteAudios"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
@@ -69,65 +79,49 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const notifSound = new Audio('notif.mp3');
-
     let myName = localStorage.getItem('chatName') || "عاصم";
-    let myEmail = localStorage.getItem('chatEmail') || "";
     document.getElementById('setUserName').value = myName;
-    document.getElementById('setUserEmail').value = myEmail;
 
-    const getInitials = (n) => n.substring(0, 2);
+    // --- نظام المكالمة والصوت (WebRTC) ---
+    let audioCtx, analyser, dataArray, source;
 
-    window.toggleSettings = () => {
-        const m = document.getElementById('settingsModal');
-        m.style.display = m.style.display === 'block' ? 'none' : 'block';
-    };
-
-    window.saveSettings = async () => {
-        const newName = document.getElementById('setUserName').value.trim();
-        if(!newName) return;
-
-        // فحص إذا الاسم مأخوذ من شخص آخر
-        const qUsers = query(collection(db, "active_users"), where("name", "==", newName));
-        const check = await getDocs(qUsers);
-        
-        if(!check.empty && newName !== myName) {
-            alert("هذا الاسم مأخوذ، اختر اسم ثاني يا بطل!");
-            return;
-        }
-
-        myName = newName;
-        myEmail = document.getElementById('setUserEmail').value;
-        localStorage.setItem('chatName', myName);
-        localStorage.setItem('chatEmail', myEmail);
-        
-        // تسجيل المستخدم في القائمة النشطة لمنع التكرار
-        await setDoc(doc(db, "active_users", myName), { name: myName, lastSeen: serverTimestamp() });
-        
-        alert("تم الحفظ! ✅");
-        toggleSettings();
-    };
-
-    // نظام المكالمة والصوت
-    window.startVoiceCall = async () => {
-        document.getElementById('callBar').style.display = 'flex';
-        document.getElementById('callBtn').style.display = 'none';
-        
-        await setDoc(doc(db, "active_calls", myName), { name: myName, initials: getInitials(myName) });
-        
-        // طلب إذن المايك لتفعيل الصوت
+    window.joinVoice = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            console.log("المايك شغال");
-        } catch(e) {
-            alert("لازم تفعل المايك عشان يسمعونك!");
-        }
+            document.getElementById('callBar').style.display = 'flex';
+            document.getElementById('joinBtn').style.display = 'none';
+
+            await setDoc(doc(db, "active_calls", myName), { 
+                name: myName, 
+                initials: myName.substring(0, 2),
+                isSpeaking: false 
+            });
+
+            // كشف الصوت لجعل الدائرة تلمع
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            source = audioCtx.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            detectSpeaking();
+
+        } catch(e) { alert("افتح المايك يا بطل!"); }
     };
 
-    window.endCall = async () => {
+    function detectSpeaking() {
+        analyser.getByteFrequencyData(dataArray);
+        let sum = dataArray.reduce((a, b) => a + b, 0);
+        let average = sum / dataArray.length;
+        let isSpeaking = average > 30; // حساسية الصوت
+        
+        updateDoc(doc(db, "active_calls", myName), { isSpeaking: isSpeaking });
+        requestAnimationFrame(detectSpeaking);
+    }
+
+    window.leaveVoice = async () => {
         await deleteDoc(doc(db, "active_calls", myName));
-        document.getElementById('callBar').style.display = 'none';
-        document.getElementById('callBtn').style.display = 'block';
+        location.reload();
     };
 
     onSnapshot(collection(db, "active_calls"), (snap) => {
@@ -135,24 +129,31 @@
         list.innerHTML = "";
         snap.forEach(d => {
             const u = d.data();
-            list.innerHTML += `<div class="avatar" title="${u.name}">${u.initials}</div>`;
+            const div = document.createElement('div');
+            div.className = `avatar ${u.isSpeaking ? 'speaking' : ''}`;
+            div.title = u.name;
+            div.innerText = u.initials;
+            list.appendChild(div);
         });
     });
 
-    // الشات مع التعديل والحذف
+    // --- الشات والتحكم ---
+    window.toggleSettings = () => {
+        const m = document.getElementById('settingsModal');
+        m.style.display = m.style.display === 'block' ? 'none' : 'block';
+    };
+
+    window.saveSettings = () => {
+        const n = document.getElementById('setUserName').value;
+        localStorage.setItem('chatName', n);
+        location.reload();
+    };
+
     window.sendMsg = async () => {
         const input = document.getElementById('chatInput');
         if(!input.value.trim()) return;
-        await addDoc(collection(db, "messages"), { text: input.value, user: myName, email: myEmail, time: serverTimestamp() });
+        await addDoc(collection(db, "messages"), { text: input.value, user: myName, time: serverTimestamp() });
         input.value = "";
-    };
-
-    window.showActions = (id) => {
-        const el = document.getElementById('actions-' + id);
-        if(el) {
-            el.style.display = 'block';
-            setTimeout(() => { if(el) el.style.display = 'none'; }, 3000);
-        }
     };
 
     window.deleteMsg = async (id) => { if(confirm("حذف؟")) await deleteDoc(doc(db, "messages", id)); };
@@ -169,13 +170,16 @@
             const isMe = data.user === myName;
             const div = document.createElement('div');
             div.className = 'msg';
-            if(isMe) div.onclick = () => showActions(d.id);
+            div.onclick = () => {
+                const act = div.querySelector('.actions');
+                if(act) act.style.display = (act.style.display === 'flex' ? 'none' : 'flex');
+            };
             div.innerHTML = `
                 <span style="color:var(--main-color); font-size:10px;">${data.user}</span>
                 <div>${data.text}</div>
-                ${isMe ? `<div id="actions-${d.id}" class="actions">
-                    <button onclick="editMsg('${d.id}', '${data.text}')">✏️</button>
-                    <button onclick="deleteMsg('${d.id}')">🗑️</button>
+                ${isMe ? `<div class="actions">
+                    <button onclick="event.stopPropagation(); editMsg('${d.id}', '${data.text}')">✏️</button>
+                    <button onclick="event.stopPropagation(); deleteMsg('${d.id}')">🗑️</button>
                 </div>` : ''}
             `;
             container.appendChild(div);
