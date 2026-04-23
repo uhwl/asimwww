@@ -3,81 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | V3.5.8vpro</title>
+    <title>AsimTalk | V3.5.9vpro</title>
     <style>
-        :root { --main: #00ff00; --bg: #0a0a0a; --gray: #1a1a1a; --light-gray: #2a2a2a; }
+        :root { --main: #00ff00; --bg: #0a0a0a; --gray: #1a1a1a; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        body.theme-blue { --main: #0088ff; }
-        body.theme-red { --main: #ff0044; }
-        body.theme-gold { --main: #ffd700; }
+        /* شاشة كلمة السر */
+        #passLock { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 20000; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        #passLock input { padding: 15px; border: 1px solid var(--main); background: #111; color: var(--main); text-align: center; border-radius: 10px; outline: none; }
 
-        #header { background: var(--gray); padding: 12px 20px; border-bottom: 2px solid var(--light-gray); display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
-        .nav-btns { display: flex; gap: 8px; }
-        .nav-btns button { background: var(--light-gray); border: 1px solid #333; color: #eee; padding: 8px 15px; cursor: pointer; border-radius: 6px; font-weight: bold; transition: 0.2s; }
-        #dynamicBtn.leave-mode { background: #aa0000; color: white; border-color: #ff4444; }
+        #header { background: var(--gray); padding: 12px 20px; border-bottom: 2px solid #222; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+        #callBar { display: none; background: #000; border-bottom: 1px solid #333; padding: 15px; gap: 20px; align-items: center; }
+        .avatar { width: 50px; height: 50px; background: #222; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid #444; }
+        .avatar.speaking { border-color: var(--main) !important; box-shadow: 0 0 15px var(--main); }
 
-        #callBar { display: none; background: #000; border-bottom: 1px solid var(--light-gray); padding: 15px; gap: 20px; align-items: center; min-height: 90px; }
-        .avatar-container { display: flex; flex-direction: column; align-items: center; min-width: 70px; }
-        .avatar { width: 55px; height: 55px; background: #111; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid #333; transition: 0.1s; }
-        .avatar.speaking { border-color: var(--main) !important; box-shadow: 0 0 15px var(--main); transform: scale(1.05); }
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { background: var(--gray); padding: 10px; border-radius: 8px; border-right: 4px solid var(--main); position: relative; }
 
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: var(--gray); padding: 12px; border-radius: 10px; max-width: 80%; align-self: flex-start; border-right: 4px solid var(--main); cursor: pointer; position: relative; }
-        .actions { display: none; margin-top: 8px; border-top: 1px solid #333; padding-top: 5px; gap: 15px; font-size: 16px; }
+        /* قائمة الأوامر المساعدة */
+        #cmdHint { display: none; background: #222; border: 1px solid var(--main); padding: 10px; position: absolute; bottom: 80px; right: 20px; border-radius: 8px; width: 200px; z-index: 5000; }
+        #cmdHint div { padding: 5px; cursor: pointer; border-bottom: 1px solid #333; font-size: 13px; }
+        #cmdHint div:hover { background: var(--main); color: black; }
 
-        .modal { display: none; position: fixed; top: 70px; left: 20px; background: #111; padding: 20px; border: 2px solid var(--main); z-index: 1001; border-radius: 15px; width: 280px; box-shadow: 0 0 50px #000; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; background: #000; border: 1px solid #333; color: white; border-radius: 5px; box-sizing: border-box; }
+        #input-area { padding: 15px; display: flex; gap: 10px; background: var(--gray); position: relative; }
+        input#chatInput { flex-grow: 1; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; outline: none; }
         
-        .snowflake { position: fixed; top: -10px; color: white; pointer-events: none; z-index: 9999; animation: fall linear forwards; }
-        @keyframes fall { to { transform: translateY(105vh); } }
-
-        #input-area { padding: 15px; display: flex; gap: 10px; background: var(--gray); border-top: 1px solid #333; }
-        #chatInput { flex-grow: 1; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; outline: none; }
+        #crashOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 19000; justify-content: center; align-items: center; color: red; }
     </style>
 </head>
 <body>
 
+<div id="passLock">
+    <h2 style="color:var(--main)">🔒 نظام محمي</h2>
+    <input type="password" id="entryPass" placeholder="أدخل كلمة السر للدخول" onkeyup="checkEntryPass(this.value)">
+</div>
+
+<div id="crashOverlay"><h1>SYSTEM HALTED</h1></div>
+
 <div id="header">
-    <div style="font-weight:bold; font-size:18px;">AsimTalk <span style="color:var(--main)">vpro</span></div>
-    <div class="nav-btns">
-        <button onclick="toggleSnow()">❄️</button>
-        <button id="dynamicBtn" onclick="handleCallAction()">إنشاء مكالمة</button>
-        <button onclick="toggleSettings()">⚙️</button>
+    <div style="font-weight:bold;">AsimTalk <span style="color:var(--main)">vpro</span></div>
+    <div style="display:flex; gap:10px;">
+        <button id="dynamicBtn" onclick="handleCall()" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">تحميل...</button>
+        <button onclick="toggleSet()" style="background:none; border:none; color:white; cursor:pointer;">⚙️</button>
     </div>
 </div>
 
-<div id="callBar">
-    <div id="participantsList" style="display: flex; gap: 20px;"></div>
-</div>
+<div id="callBar"><div id="participantsList" style="display:flex; gap:15px;"></div></div>
 
 <div id="messages"></div>
 
-<div id="settingsModal" class="modal">
-    <h3 style="margin:0 0 10px 0; color:var(--main);">⚙️ vpro Settings</h3>
-    <input type="text" id="uName" placeholder="الاسم">
-    <input type="email" id="uEmail" placeholder="الايميل">
-    <button onclick="saveSets()" style="width:100%; padding:10px; background:var(--main); border:none; border-radius:5px; font-weight:bold; cursor:pointer;">حفظ وتحديث</button>
-    
-    <div id="adminZone" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-        <select onchange="changeGlobalTheme(this.value)">
-            <option value="">ثيم: أخضر</option>
-            <option value="theme-blue">ثيم: أزرق</option>
-            <option value="theme-red">ثيم: أحمر</option>
-            <option value="theme-gold">ثيم: ذهبي</option>
-        </select>
-    </div>
-    <p style="font-size:10px; color:#444; text-align:center; margin-top:10px;">V3.5.8vpro</p>
+<div id="cmdHint">
+    <div onclick="applyCmd('/kick ')">/kick (طرد)</div>
+    <div onclick="applyCmd('/kick all')">/kick all (طرد الكل)</div>
+    <div onclick="applyCmd('/crash ')">/crash (كراش)</div>
+    <div onclick="applyCmd('/ban ')">/ban (حظر وقتي)</div>
+    <div onclick="applyCmd('/ipall')">/ipall (كشف الـ IP)</div>
 </div>
 
 <div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب هنا..." onkeydown="if(event.key==='Enter') send()">
-    <button onclick="send()" style="background:var(--main); border:none; padding:0 20px; border-radius:8px; font-weight:bold; color:black; cursor:pointer;">إرسال</button>
+    <input type="text" id="chatInput" placeholder="اكتب رسالة أو أمر /..." oninput="showCmds(this.value)" onkeydown="handleKey(event)">
+    <button onclick="send()" style="background:var(--main); border:none; padding:0 20px; border-radius:8px; font-weight:bold; color:black;">إرسال</button>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDilbY1pYCSFCB3graoYdst79pCo8rxGK8",
@@ -95,75 +85,103 @@
     let myEmail = localStorage.getItem('chatEmail') || "";
     const isAdmin = (myName === "عاصم" && myEmail === "nza76667@gmail.com");
 
-    if(isAdmin) document.getElementById('adminZone').style.display = 'block';
+    // --- كلمة السر ---
+    window.checkEntryPass = (val) => {
+        if(val === "aszayz") document.getElementById('passLock').style.display = 'none';
+    };
 
-    // --- مزامنة الثيم ---
-    onSnapshot(doc(db, "settings", "global"), (s) => {
-        if(s.exists()) document.body.className = s.data().theme || "";
-    });
+    // --- نظام الأوامر ---
+    window.showCmds = (val) => {
+        const hint = document.getElementById('cmdHint');
+        hint.style.display = (val.startsWith('/') && isAdmin) ? 'block' : 'none';
+    };
 
-    // --- تنظيف عند الخروج ---
-    window.addEventListener('beforeunload', async () => {
-        if(myName) await deleteDoc(doc(db, "active_calls", myName));
-    });
+    window.applyCmd = (cmd) => {
+        document.getElementById('chatInput').value = cmd;
+        document.getElementById('cmdHint').style.display = 'none';
+        document.getElementById('chatInput').focus();
+    };
 
-    // --- نظام المكالمة ---
+    window.handleKey = (e) => {
+        if(e.key === 'Enter') send();
+    };
+
+    // --- الوظائف الأساسية ---
+    window.send = async () => {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if(!text) return;
+        
+        input.value = ""; // مسح الرسالة فوراً
+        document.getElementById('cmdHint').style.display = 'none';
+
+        if(text.startsWith('/') && isAdmin) {
+            await processCommand(text);
+        } else {
+            await addDoc(collection(db, "messages"), { text, user: myName, time: serverTimestamp() });
+        }
+    };
+
+    async function processCommand(cmd) {
+        const parts = cmd.split(' ');
+        const action = parts[0];
+        const target = parts[1];
+
+        if(action === '/kick') {
+            if(target === 'all') {
+                const snap = await getDocs(collection(db, "active_calls"));
+                snap.forEach(async d => await deleteDoc(doc(db, "active_calls", d.id)));
+            } else await deleteDoc(doc(db, "active_calls", target));
+        }
+        if(action === '/crash') await updateDoc(doc(db, "active_calls", target), { isCrashed: true });
+        if(action === '/ipall') {
+            alert("كشف البيانات (تجريبي):\nعاصم: 192.168.1.1\nمستخدم 2: 176.22.4.9");
+        }
+        if(action === '/ban') {
+            const time = prompt("كم المدة؟ (دقيقة/ساعة/يوم)", "10 دقائق");
+            alert(`تم حظر ${target} لمدة ${time}`);
+        }
+    }
+
+    // --- مزامنة المكالمة ---
     onSnapshot(collection(db, "active_calls"), (snap) => {
         const list = document.getElementById('participantsList');
         const bar = document.getElementById('callBar');
         const btn = document.getElementById('dynamicBtn');
-        
         bar.style.display = snap.empty ? 'none' : 'flex';
         list.innerHTML = "";
-        let foundMe = false;
-        
+        let inCall = false;
         snap.forEach(d => {
             const u = d.data();
-            if(u.name === myName) foundMe = true;
-            list.innerHTML += `
-                <div class="avatar-container">
-                    <div class="avatar ${u.isSpeaking?'speaking':''}">${u.name.substring(0,2)}</div>
-                    <span style="font-size:10px; margin-top:4px;">${u.name}</span>
-                </div>`;
+            if(u.name === myName) {
+                inCall = true;
+                if(u.isCrashed) document.getElementById('crashOverlay').style.display = 'flex';
+            }
+            list.innerHTML += `<div class="avatar ${u.isSpeaking?'speaking':''}">${u.name.substring(0,2)}</div>`;
         });
-
-        if(foundMe) {
-            btn.innerText = "مغادرة";
-            btn.className = "leave-mode";
-        } else {
-            btn.innerText = snap.empty ? "إنشاء مكالمة" : "انضمام";
-            btn.className = "";
-        }
+        btn.innerText = inCall ? "مغادرة" : (snap.empty ? "إنشاء مكالمة" : "انضمام");
     });
 
-    window.handleCallAction = async () => {
+    window.handleCall = async () => {
         const btn = document.getElementById('dynamicBtn');
         if(btn.innerText === "مغادرة") {
             await deleteDoc(doc(db, "active_calls", myName));
         } else {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            await setDoc(doc(db, "active_calls", myName), { name: myName, isSpeaking: false });
-            
-            const ctx = new AudioContext();
-            const analyzer = ctx.createAnalyser();
-            ctx.createMediaStreamSource(stream).connect(analyzer);
-            const data = new Uint8Array(analyzer.frequencyBinCount);
-            const check = () => {
-                analyzer.getByteFrequencyData(data);
-                let vol = data.reduce((a,b)=>a+b)/data.length;
-                updateDoc(doc(db, "active_calls", myName), { isSpeaking: vol > 0.6 });
-                requestAnimationFrame(check);
+            const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+            await setDoc(doc(db, "active_calls", myName), { name: myName, isSpeaking: false, isCrashed: false });
+            // كود الحساسية
+            const actx = new AudioContext();
+            const ana = actx.createAnalyser();
+            actx.createMediaStreamSource(s).connect(ana);
+            const data = new Uint8Array(ana.frequencyBinCount);
+            const loop = () => {
+                ana.getByteFrequencyData(data);
+                let v = data.reduce((a,b)=>a+b)/data.length;
+                updateDoc(doc(db, "active_calls", myName), { isSpeaking: v > 0.5 });
+                requestAnimationFrame(loop);
             };
-            check();
+            loop();
         }
-    };
-
-    // --- الشات والتعديل ---
-    window.send = async () => {
-        const i = document.getElementById('chatInput');
-        if(!i.value.trim()) return;
-        await addDoc(collection(db, "messages"), { text: i.value, user: myName, time: serverTimestamp() });
-        i.value = "";
     };
 
     onSnapshot(query(collection(db, "messages"), orderBy("time", "asc")), (snap) => {
@@ -171,55 +189,21 @@
         c.innerHTML = "";
         snap.forEach(d => {
             const data = d.data();
-            const isMe = data.user === myName;
-            const div = document.createElement('div');
-            div.className = 'msg';
-            div.onclick = () => { if(isMe) {
-                const a = div.querySelector('.actions');
-                a.style.display = a.style.display==='flex'?'none':'flex';
-            }};
-            div.innerHTML = `<b style="color:var(--main); font-size:10px;">${data.user}</b><div>${data.text}</div>
-                ${isMe?`<div class="actions"><span onclick="window.ed('${d.id}','${data.text}')">✏️</span> <span onclick="window.dl('${d.id}')" style="color:red;">🗑️</span></div>`:''}`;
-            c.appendChild(div);
+            c.innerHTML += `<div class="msg"><b style="color:var(--main); font-size:10px;">${data.user}</b><div>${data.text}</div></div>`;
         });
         c.scrollTop = c.scrollHeight;
     });
 
-    window.dl = async (id) => await deleteDoc(doc(db, "messages", id));
-    window.ed = async (id, old) => {
-        const n = prompt("تعديل الرسالة:", old);
-        if(n && n !== old) await updateDoc(doc(db, "messages", id), { text: n });
-    };
-
-    // --- التحكم بالإعدادات ---
-    window.toggleSettings = () => {
-        const m = document.getElementById('settingsModal');
-        m.style.display = (m.style.display === 'block' ? 'none' : 'block');
-    };
-
-    window.saveSets = () => {
-        localStorage.setItem('chatName', document.getElementById('uName').value);
-        localStorage.setItem('chatEmail', document.getElementById('uEmail').value);
+    window.toggleSet = () => {
+        const n = prompt("تغيير الاسم:", myName);
+        const e = prompt("تغيير الايميل:", myEmail);
+        if(n) localStorage.setItem('chatName', n);
+        if(e) localStorage.setItem('chatEmail', e);
         location.reload();
     };
 
-    window.changeGlobalTheme = async (t) => await updateDoc(doc(db, "settings", "global"), { theme: t });
-
-    // --- الثلج ---
-    let snowOn = false;
-    window.toggleSnow = () => {
-        snowOn = !snowOn;
-        if(snowOn) {
-            window.snowInt = setInterval(() => {
-                const f = document.createElement('div'); f.className = 'snowflake'; f.innerText = '❄';
-                f.style.left = Math.random() * 100 + 'vw'; f.style.animationDuration = Math.random()*3+2+'s';
-                document.body.appendChild(f); setTimeout(()=>f.remove(), 5000);
-            }, 100);
-        } else clearInterval(window.snowInt);
-    };
-
-    document.getElementById('uName').value = myName;
-    document.getElementById('uEmail').value = myEmail;
+    // تنظيف عند الخروج
+    window.onbeforeunload = () => { if(myName) deleteDoc(doc(db, "active_calls", myName)); };
 </script>
 </body>
 </html>
