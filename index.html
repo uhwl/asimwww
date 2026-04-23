@@ -7,39 +7,64 @@
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; }
         
-        /* مستطيل المكالمة الصغير */
-        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 10px; display: flex; gap: 10px; align-items: center; overflow-x: auto; min-height: 60px; }
-        .avatar { width: 45px; height: 45px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--main-color); font-size: 14px; flex-shrink: 0; }
-        
-        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); }
-        #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; }
+        /* الهيدر */
+        #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .nav-btns { display: flex; gap: 10px; }
+        .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+
+        /* مستطيل المكالمة العلوي */
+        #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 10px; display: flex; gap: 10px; align-items: center; overflow-x: auto; min-height: 60px; transition: 0.3s; }
+        .avatar { width: 45px; height: 45px; background: #008080; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 2px solid var(--main-color); font-size: 14px; flex-shrink: 0; position: relative; }
+        .avatar::after { content: attr(title); position: absolute; bottom: -15px; font-size: 9px; color: #888; }
+
+        /* الشات */
+        #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+        .msg { background: var(--panel-bg); padding: 10px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 3px solid var(--main-color); position: relative; }
+        .user-tag { color: var(--main-color); font-size: 10px; font-weight: bold; display: block; margin-bottom: 4px; }
+
+        /* نافذة الإعدادات */
+        #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 12px; width: 85%; max-width: 350px; box-shadow: 0 0 30px #000; }
+        #settingsModal h3 { margin-top: 0; color: var(--main-color); }
+        #settingsModal input { width: 100%; padding: 12px; margin: 10px 0; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; outline: none; }
+
+        /* منطقة الإدخال */
+        #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
         input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 5px; outline: none; }
-        button { background: var(--main-color); border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #sendBtn { background: var(--main-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; color: black; }
     </style>
 </head>
 <body>
 
 <div id="header">
-    <div style="font-weight: bold;">⚡ AsimTalk</div>
-    <button onclick="startVoiceCall()" id="callBtn">📞 دخول المكالمة</button>
+    <div style="font-weight: bold; font-size: 18px;">⚡ AsimTalk</div>
+    <div class="nav-btns">
+        <button onclick="startVoiceCall()" id="callBtn">📞 دخول</button>
+        <button onclick="toggleSettings()">⚙️</button>
+    </div>
 </div>
 
 <div id="callBar" style="display:none;">
-    <div id="participantsList" style="display: flex; gap: 10px;"></div>
-    <button onclick="endCall()" style="background:red; font-size:12px; margin-right:auto;">مغادرة</button>
+    <div id="participantsList" style="display: flex; gap: 15px;"></div>
+    <button onclick="endCall()" style="background:red; color:white; border:none; border-radius:5px; padding:5px 10px; margin-right:auto; cursor:pointer;">مغادرة</button>
 </div>
 
 <div id="messages"></div>
 
-<div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب هنا...">
-    <button onclick="sendMsg()">إرسال</button>
+<div id="settingsModal">
+    <h3>⚙️ الإعدادات</h3>
+    <label>الاسم المستعار:</label>
+    <input type="text" id="setUserName">
+    <label>الايميل:</label>
+    <input type="email" id="setUserEmail">
+    <button onclick="saveSettings()" style="width: 100%; padding: 12px; background: var(--main-color); border: none; font-weight: bold; cursor: pointer; border-radius: 5px; color: black;">حفظ التغييرات</button>
+    <button onclick="toggleSettings()" style="width: 100%; margin-top: 10px; background: #333; color: white; border: none; padding: 8px; cursor: pointer; border-radius: 5px;">إغلاق</button>
 </div>
 
-<audio id="remoteAudio" autoplay></audio>
+<div id="input-area">
+    <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter') sendMsg()">
+    <button id="sendBtn" onclick="sendMsg()">إرسال</button>
+</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -56,53 +81,68 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    let myName = localStorage.getItem('chatName') || "عاصم";
-    let localStream;
-    let peerConnection;
+    const notifSound = new Audio('notif.mp3');
 
-    // دالة أول حرفين
+    let myName = localStorage.getItem('chatName') || "عاصم";
+    let myEmail = localStorage.getItem('chatEmail') || "";
+    document.getElementById('setUserName').value = myName;
+    document.getElementById('setUserEmail').value = myEmail;
+
     const getInitials = (n) => n.substring(0, 2);
 
+    // دالة فتح وإغلاق الإعدادات
+    window.toggleSettings = () => {
+        const modal = document.getElementById('settingsModal');
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    };
+
+    window.saveSettings = () => {
+        myName = document.getElementById('setUserName').value;
+        myEmail = document.getElementById('setUserEmail').value;
+        localStorage.setItem('chatName', myName);
+        localStorage.setItem('chatEmail', myEmail);
+        alert("تم الحفظ! ✅");
+        toggleSettings();
+        location.reload(); // إعادة تحميل لتحديث الاسم في المكالمة
+    };
+
+    // نظام المكالمة
     window.startVoiceCall = async () => {
         document.getElementById('callBar').style.display = 'flex';
         document.getElementById('callBtn').style.display = 'none';
-        
-        // تسجيل اسمك في الـ "المتواجدين حالياً بالمكالمة" في Firebase
         await setDoc(doc(db, "active_calls", myName), {
             name: myName,
             initials: getInitials(myName),
             joinedAt: serverTimestamp()
         });
-
-        // طلب إذن المايك (WebRTC مباشر)
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        
-        // هنا نقوم بإعداد الاتصال المباشر (بيتم ربطه بـ Firebase للتنسيق بين المستخدمين)
-        console.log("الصوت يعمل محلياً..");
+        navigator.mediaDevices.getUserMedia({ audio: true }).catch(e => alert("يرجى تفعيل المايك"));
     };
 
     window.endCall = async () => {
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
         await deleteDoc(doc(db, "active_calls", myName));
         document.getElementById('callBar').style.display = 'none';
         document.getElementById('callBtn').style.display = 'block';
     };
 
-    // تحديث قائمة المتواجدين في المكالمة فوراً (المستطيل العلوي)
     onSnapshot(collection(db, "active_calls"), (snap) => {
         const list = document.getElementById('participantsList');
         list.innerHTML = "";
-        snap.forEach(doc => {
-            const user = doc.data();
-            list.innerHTML += `<div class="avatar" title="${user.name}">${user.initials}</div>`;
+        snap.forEach(d => {
+            const u = d.data();
+            list.innerHTML += `<div class="avatar" title="${u.name}">${u.initials}</div>`;
         });
     });
 
-    // كود الشات العادي
+    // الشات
     window.sendMsg = async () => {
         const input = document.getElementById('chatInput');
         if(!input.value.trim()) return;
-        await addDoc(collection(db, "messages"), { text: input.value, user: myName, time: serverTimestamp() });
+        await addDoc(collection(db, "messages"), {
+            text: input.value,
+            user: myName,
+            email: myEmail,
+            time: serverTimestamp()
+        });
         input.value = "";
     };
 
@@ -113,11 +153,12 @@
             const data = d.data();
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = `<span style="color:var(--main-color); font-size:10px;">${data.user}</span><br>${data.text}`;
+            div.innerHTML = `<span class="user-tag">${data.user}</span><div>${data.text}</div>`;
             container.appendChild(div);
         });
         container.scrollTop = container.scrollHeight;
     });
+
 </script>
 </body>
 </html>
