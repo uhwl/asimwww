@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AsimTalk | Pro V3.3</title>
+    <title>AsimTalk | Pro V3.4</title>
     <style>
         :root { --main-color: #00ff00; --bg-dark: #0e0e0e; --panel-bg: #1a1a1a; }
         body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* السكرول بار المطلوب */
+        /* السكرول بار المطلوب (أسود ورصاصي) */
         ::-webkit-scrollbar { width: 10px; }
         ::-webkit-scrollbar-track { background: #222; }
         ::-webkit-scrollbar-thumb { background: #000; border: 1px solid #444; border-radius: 5px; }
@@ -16,18 +16,20 @@
         #header { background: var(--panel-bg); padding: 10px 20px; border-bottom: 2px solid var(--main-color); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
         .nav-btns button { background: none; border: 1px solid var(--main-color); color: var(--main-color); padding: 5px 12px; cursor: pointer; border-radius: 5px; font-weight: bold; }
 
-        /* بار المكالمة */
+        /* بار المكالمة الذكي */
         #callBar { display: none; background: #111; border-bottom: 1px solid var(--main-color); padding: 15px; gap: 15px; align-items: center; overflow-x: auto; min-height: 85px; }
-        .avatar { width: 60px; height: 60px; background: #004d4d; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 5px solid #333; transition: 0.2s; position: relative; flex-shrink: 0; }
-        .avatar.speaking { border-color: var(--main-color); box-shadow: 0 0 20px var(--main-color); transform: scale(1.05); }
-        .avatar::after { content: attr(data-name); position: absolute; bottom: -20px; font-size: 10px; color: #888; }
+        .avatar { width: 60px; height: 60px; background: #004d4d; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 5px solid #333; transition: 0.15s ease-in-out; position: relative; flex-shrink: 0; }
+        
+        /* تأثير التحدث بحساسية عالية وحواف عريضة */
+        .avatar.speaking { border-color: var(--main-color); box-shadow: 0 0 25px var(--main-color); transform: scale(1.08); }
+        .avatar::after { content: attr(data-name); position: absolute; bottom: -20px; font-size: 10px; color: #888; white-space: nowrap; }
 
         #messages { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { background: var(--panel-bg); padding: 12px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 4px solid var(--main-color); cursor: pointer; }
+        .msg { background: var(--panel-bg); padding: 12px; border-radius: 8px; max-width: 80%; align-self: flex-start; border-right: 4px solid var(--main-color); cursor: pointer; position: relative; }
         .actions { display: none; margin-top: 8px; border-top: 1px solid #333; padding-top: 5px; gap: 15px; font-size: 12px; }
 
         #settingsModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 30px; border: 2px solid var(--main-color); z-index: 1000; border-radius: 15px; width: 300px; text-align: center; }
-        #settingsModal input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        #settingsModal input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
 
         #input-area { background: var(--panel-bg); padding: 15px; display: flex; gap: 10px; border-top: 1px solid #333; }
         input#chatInput { flex-grow: 1; padding: 12px; background: #252525; border: 1px solid #444; color: white; border-radius: 8px; outline: none; }
@@ -54,15 +56,15 @@
 
 <div id="settingsModal">
     <h3 style="color:var(--main-color);">⚙️ الإعدادات</h3>
-    <input type="text" id="setUserName" placeholder="الاسم">
+    <input type="text" id="setUserName" placeholder="الاسم المستعار">
     <input type="email" id="setUserEmail" placeholder="الايميل">
-    <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--main-color); border:none; border-radius:8px; font-weight:bold;">حفظ</button>
-    <button onclick="toggleSettings()" style="width:100%; margin-top:10px; background:#333; color:white; border:none; padding:8px; border-radius:8px;">إغلاق</button>
+    <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--main-color); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">حفظ</button>
+    <button onclick="toggleSettings()" style="width:100%; margin-top:10px; background:#333; color:white; border:none; padding:8px; border-radius:8px; cursor:pointer;">إغلاق</button>
 </div>
 
 <div id="input-area">
-    <input type="text" id="chatInput" placeholder="اكتب هنا..." onkeydown="if(event.key==='Enter') sendMsg()">
-    <button onclick="sendMsg()" style="background:var(--main-color); border:none; padding:10px 20px; border-radius:8px; font-weight:bold;">إرسال</button>
+    <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeydown="if(event.key==='Enter') sendMsg()">
+    <button onclick="sendMsg()" style="background:var(--main-color); border:none; padding:10px 20px; border-radius:8px; font-weight:bold; color:black; cursor:pointer;">إرسال</button>
 </div>
 
 <script type="module">
@@ -84,7 +86,7 @@
     let myEmail = localStorage.getItem('chatEmail') || "";
     let isInCall = false;
 
-    // --- نظام المكالمة الذكي ---
+    // --- نظام المكالمة فائق الحساسية ---
     window.joinVoice = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -98,6 +100,7 @@
 
             const audioContext = new AudioContext();
             const analyser = audioContext.createAnalyser();
+            analyser.smoothingTimeConstant = 0.4; // تنعيم حركة النور الأخضر
             const source = audioContext.createMediaStreamSource(stream);
             source.connect(analyser);
             const data = new Uint8Array(analyser.frequencyBinCount);
@@ -106,11 +109,12 @@
                 if(!isInCall) return;
                 analyser.getByteFrequencyData(data);
                 let vol = data.reduce((a, b) => a + b) / data.length;
-                updateDoc(doc(db, "active_calls", myName), { isSpeaking: vol > 35 });
+                // حساسية عالية جداً (5) ليلقط أدنى صوت
+                updateDoc(doc(db, "active_calls", myName), { isSpeaking: vol > 5 });
                 requestAnimationFrame(detect);
             };
             detect();
-        } catch (e) { alert("افتح المايك!"); }
+        } catch (e) { alert("تأكد من السماح للمايك!"); }
     };
 
     window.leaveVoice = async () => {
@@ -119,11 +123,9 @@
         location.reload();
     };
 
-    // مراقبة المكالمة لإظهار/إخفاء البار والدوائر
     onSnapshot(collection(db, "active_calls"), (snap) => {
         const bar = document.getElementById('callBar');
         const list = document.getElementById('participantsList');
-        
         if (snap.empty) {
             bar.style.display = 'none';
         } else {
@@ -132,8 +134,6 @@
             snap.forEach(d => {
                 const u = d.data();
                 list.innerHTML += `<div class="avatar ${u.isSpeaking ? 'speaking' : ''}" data-name="${u.name}">${u.initials}</div>`;
-                
-                // تحديث أزرار التحكم لو أنت اللي داخل
                 if(u.name === myName) {
                     document.getElementById('joinBtn').style.display = 'none';
                     document.getElementById('leaveBtn').style.display = 'block';
@@ -188,7 +188,7 @@
 
     window.fastDelete = async (id) => { await deleteDoc(doc(db, "messages", id)); };
     window.fastEdit = async (id, old) => {
-        const n = prompt("تعديل:", old);
+        const n = prompt("تعديل الرسالة:", old);
         if(n) await updateDoc(doc(db, "messages", id), { text: n });
     };
 </script>
